@@ -1,0 +1,37 @@
+<div class="panel">
+  <div class="panel__head">
+    <span class="panel__title">Büyüklük Dağılımı</span>
+    <span class="panel__badge">24 Saat</span>
+  </div>
+
+  <div class="donut-row">
+    <!-- Donut Chart -->
+    <div class="donut-wrap">
+      <svg class="donut-svg" viewBox="0 0 120 120">
+        <!-- Background ring -->
+        <circle class="donut-bg" cx="60" cy="60" r="48" />
+        <!-- Segments -->
+        @for (seg of segments(); track seg.label; let i = $index) {
+        <circle class="donut-seg" cx="60" cy="60" r="48" [style.stroke]="seg.color"
+          [style.stroke-dasharray]="seg.dashArray" [style.stroke-dashoffset]="seg.dashOffset"
+          [style.animation-delay]="(i * 120) + 'ms'" />
+        }
+      </svg>
+      <div class="donut-center">
+        <span class="donut-center__num">{{ total() }}</span>
+        <span class="donut-center__lbl">TOPLAM</span>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      @for (item of data; track item.label) {
+      <div class="legend-item">
+        <span class="legend-dot" [style.background]="item.color"></span>
+        <span class="legend-label">{{ item.label }}</span>
+        <span class="legend-count">({{ item.count }})</span>
+      </div>
+      }
+    </div>
+  </div>
+</div>

@@ -1,0 +1,227 @@
+:host {
+  display: block;
+}
+
+.panel {
+  background: linear-gradient(180deg, rgba(17, 24, 39, 0.95), rgba(14, 19, 32, 0.95));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 1.1rem 1.25rem 0.85rem;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---- Header ---- */
+.panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  gap: 0.5rem;
+}
+
+.title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.panel__title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #d8e4f7;
+}
+
+/* ---- Time Range Filter Buttons ---- */
+.filters {
+  display: flex;
+  gap: 0.28rem;
+}
+
+.fbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  color: #8fa6c9;
+  border-radius: 7px;
+  font-size: 0.62rem;
+  font-weight: 500;
+  padding: 0.22rem 0.52rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.fbtn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #c8d8ef;
+}
+
+.fbtn--active {
+  border-color: rgba(96, 165, 250, 0.5);
+  background: rgba(96, 165, 250, 0.12);
+  color: #e8f0ff;
+}
+
+.fbtn__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* ---- Magnitude Filter Buttons ---- */
+.mag-filters {
+  display: flex;
+  gap: 0.3rem;
+  margin-bottom: 0.6rem;
+  padding: 0.25rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  width: fit-content;
+}
+
+.mag-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  border: none;
+  background: transparent;
+  color: #6b7f9e;
+  border-radius: 6px;
+  font-size: 0.62rem;
+  font-weight: 500;
+  padding: 0.22rem 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.02em;
+}
+
+.mag-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #b8c9e4;
+}
+
+.mag-btn--active {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e8f0ff;
+  font-weight: 600;
+}
+
+.mag-btn__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ---- Chart ---- */
+.chart-wrap {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.chart-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Grid */
+.grid {
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-width: 0.5;
+}
+
+.y-lbl {
+  fill: #6b7f9e;
+  font-size: 9px;
+  font-weight: 500;
+  text-anchor: end;
+}
+
+.x-lbl {
+  fill: #7f95b7;
+  font-size: 10px;
+  font-weight: 500;
+  text-anchor: middle;
+}
+
+/* Area */
+.area-fill {
+  opacity: 1;
+  transition: d 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Line */
+.line {
+  fill: none;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: d 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---- Dots ---- */
+.dot-hover-area {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.dot {
+  transition: r 0.15s;
+}
+
+.dot-glow {
+  transition: r 0.15s, fill-opacity 0.15s;
+}
+
+.dot-group:hover .dot {
+  r: 5;
+}
+
+.dot-group:hover .dot-glow {
+  r: 10;
+  fill-opacity: 0.25;
+}
+
+/* ---- Tooltip ---- */
+.tooltip-g {
+  opacity: 0;
+  transition: opacity 0.18s ease;
+  pointer-events: none;
+}
+
+.dot-group:hover .tooltip-g {
+  opacity: 1;
+}
+
+.tooltip-bg {
+  fill: rgba(8, 12, 24, 0.92);
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 0.5;
+}
+
+.tooltip-val {
+  fill: #f0f4ff;
+  font-size: 10px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 640px) {
+  .panel__head {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.35rem;
+  }
+
+  .mag-filters {
+    gap: 0.25rem;
+  }
+}

@@ -1,0 +1,75 @@
+<div class="panel">
+  <div class="panel__head">
+    <span class="panel__title">Deprem Trendi</span>
+    <div class="filters">
+      @for (r of ranges; track r.key) {
+      <button class="fbtn" [class.fbtn--active]="activeRange === r.key" (click)="setRange(r.key)">
+        {{ r.label }}
+      </button>
+      }
+    </div>
+  </div>
+
+  <div class="mag-filters">
+    @for (m of magRanges; track m.key) {
+    <button class="mag-btn" [class.mag-btn--active]="activeMag === m.key" (click)="setMag(m.key)">
+      <span class="mag-btn__dot" [style.background]="m.color"></span>
+      {{ m.label }}
+    </button>
+    }
+  </div>
+
+  <div class="chart-wrap">
+    <svg [attr.viewBox]="viewBox" preserveAspectRatio="xMidYMid meet" class="chart-svg">
+      <defs>
+        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" [attr.stop-color]="currentLineColor" stop-opacity="0.22" />
+          <stop offset="100%" [attr.stop-color]="currentLineColor" stop-opacity="0.02" />
+        </linearGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="2" result="b" />
+          <feMerge>
+            <feMergeNode in="b" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
+
+      <!-- Grid -->
+      @for (g of gridLines(); track g.y) {
+      <line [attr.x1]="42" [attr.x2]="545" [attr.y1]="g.y" [attr.y2]="g.y" class="grid" />
+      <text [attr.x]="36" [attr.y]="g.y + 3.5" class="y-lbl">{{ g.label }}</text>
+      }
+
+      <!-- Area -->
+      @if (areaPath()) {
+      <path [attr.d]="areaPath()" fill="url(#areaGrad)" class="area-fill" />
+      }
+
+      <!-- Line -->
+      @if (linePath()) {
+      <path [attr.d]="linePath()" [attr.stroke]="currentLineColor" class="line" filter="url(#glow)" />
+      }
+
+      <!-- Dots -->
+      @for (p of points(); track p.x) {
+      <g class="dot-group">
+        <circle [attr.cx]="p.x" [attr.cy]="p.y" r="14" class="dot-hover-area" />
+        <circle [attr.cx]="p.x" [attr.cy]="p.y" r="6" [attr.fill]="currentLineColor" fill-opacity="0.12"
+          class="dot-glow" />
+        <circle [attr.cx]="p.x" [attr.cy]="p.y" r="3.5" [attr.fill]="currentLineColor" stroke="#0d1728"
+          stroke-width="1.5" class="dot" />
+        <g class="tooltip-g">
+          <rect [attr.x]="p.x - 24" [attr.y]="p.y - 34" width="48" height="22" rx="6" class="tooltip-bg" />
+          <text [attr.x]="p.x" [attr.y]="p.y - 20" class="tooltip-val">{{ p.value }}</text>
+        </g>
+      </g>
+      }
+
+      <!-- X labels -->
+      @for (p of points(); track p.x) {
+      <text [attr.x]="p.x" [attr.y]="H - 6" class="x-lbl">{{ p.day }}</text>
+      }
+    </svg>
+  </div>
+</div>

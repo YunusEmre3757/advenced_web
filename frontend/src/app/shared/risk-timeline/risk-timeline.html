@@ -1,0 +1,33 @@
+<div class="panel">
+  <div class="panel__head">
+    <span class="panel__title">Risk Timeline ({{ activeWindow }}s)</span>
+    <div class="head-right">
+      <div class="legend">
+        <span><i class="dot dot--count"></i>Olay</span>
+        <span><i class="dot dot--mag"></i>Ort. Mag</span>
+      </div>
+      <div class="filters">
+        @for (w of windows; track w) {
+        <button type="button" class="flt" [class.flt--active]="activeWindow === w" (click)="setWindow(w)">
+          {{ w }}s
+        </button>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-wrap">
+    <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+      <path class="line line--count" [attr.d]="countPath()"></path>
+      <path class="line line--mag" [attr.d]="magPath()"></path>
+    </svg>
+  </div>
+
+  <div class="labels">
+    @for (p of data; track p.hour; let i = $index) {
+    @if (i % labelStep() === 0 || i === data.length - 1) {
+    <span>{{ p.hour }}</span>
+    }
+    }
+  </div>
+</div>

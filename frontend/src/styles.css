@@ -1,0 +1,131 @@
+/* Global Styles and Shared CSS Variables */
+:root {
+    /* Background Colors */
+    --bg-primary: #0b0f19;
+    /* Temel Koyu Siyah / Lacivert */
+    --bg-secondary: #111827;
+    /* Kart ve Panel Arka Planı */
+    --bg-tertiary: #1e293b;
+    /* Hover Kartları, Menü vb. */
+    --bg-quaternary: #0f172a;
+    /* Tablo Header vb. Koyu Kısımlar */
+
+    /* Text Colors — CMC tarzı yüksek kontrast */
+    --text-primary: #ffffff;
+    /* Pure beyaz — ana değerler */
+    --text-secondary: #e2e8f0;
+    /* Açık gri — tablo satırları, içerik */
+    --text-muted: #a1a1aa;
+    /* Orta gri — etiketler (label) */
+    --text-darker: #71717a;
+    /* Koyu gri — footer, en pasif */
+
+    /* Border Colors */
+    --border-primary: #1e293b;
+    /* Temel Çerçeve Çizgisi */
+    --border-light: #334155;
+    /* İnput vb. Çerçeve Çizgisi */
+
+    /* Accents (Mavi & Mor Konsepti) */
+    --accent-blue: #3b82f6;
+    --accent-blue-hover: #2563eb;
+    --accent-purple: #8b5cf6;
+
+    /* Status Colors */
+    --status-red: #ef4444;
+    --status-orange: #f97316;
+    --status-green: #22c55e;
+
+    /* Gradients */
+    --gradient-brand: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+
+    /* Fonts */
+    --font-family: 'Manrope', 'Sora', 'Segoe UI', sans-serif;
+}
+
+body,
+html {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    min-height: 100vh;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-light);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-darker);
+}
+
+/* ---- Leaflet Custom Marker Tooltips ---- */
+.map-mag-label {
+    background: rgba(11, 15, 25, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+.map-mag-label::before {
+    display: none;
+    /* tooltip okunu gizle */
+}
+
+/* ---- Leaflet Pin Marker (M3+) ---- */
+.eq-pin-icon {
+    background: transparent;
+    border: none;
+    transform: translateZ(0);
+}
+
+.eq-dot-pin {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    pointer-events: none;
+}
+
+.eq-dot-pin__label {
+    background: rgba(5, 8, 15, 0.94);
+    color: #ffffff;
+    border-radius: 999px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    line-height: 1;
+    padding: 3px 7px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+}
+
+.eq-dot-pin__dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    border: 2px solid rgba(0, 0, 0, 0.35);
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.75);
+}

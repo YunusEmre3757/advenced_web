@@ -1,0 +1,15 @@
+<div class="kpi" [class]="'kpi--' + accent">
+    <div class="kpi__top">
+        <span class="kpi__label">{{ label }}</span>
+        @if (delta) {
+        <span class="kpi__delta" [class.kpi__delta--up]="deltaDir === 'up'"
+            [class.kpi__delta--down]="deltaDir === 'down'">
+            {{ delta }}
+        </span>
+        }
+    </div>
+    <div class="kpi__value">{{ value }}</div>
+    @if (sub) {
+    <div class="kpi__sub">{{ sub }}</div>
+    }
+</div>

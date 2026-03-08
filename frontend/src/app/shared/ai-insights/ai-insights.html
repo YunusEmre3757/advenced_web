@@ -1,0 +1,18 @@
+<div class="panel">
+  <div class="panel__head">
+    <span class="panel__title">AI Destekli Ozet</span>
+    <span class="panel__badge">beta</span>
+  </div>
+
+  <div class="list">
+    @for (item of items; track item.title) {
+    <div class="item" [class]="'item--' + item.severity">
+      <div class="item__top">
+        <span class="item__title">{{ item.title }}</span>
+        <span class="item__sev">{{ item.severity === 'high' ? 'Yuksek' : item.severity === 'medium' ? 'Orta' : 'Dusuk' }}</span>
+      </div>
+      <p class="item__text">{{ item.text }}</p>
+    </div>
+    }
+  </div>
+</div>

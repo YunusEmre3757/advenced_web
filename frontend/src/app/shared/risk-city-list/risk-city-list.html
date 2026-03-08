@@ -1,0 +1,23 @@
+<div class="panel">
+  <div class="panel__head">
+    <span class="panel__title">Il Bazli Risk Listesi</span>
+    <span class="panel__badge">24 Saat</span>
+  </div>
+
+  <div class="list">
+    @for (item of items; track item.city) {
+    <div class="row">
+      <div class="row__left">
+        <span class="row__city">{{ item.city }}</span>
+        <span class="row__meta">{{ item.count }} olay</span>
+      </div>
+      <div class="row__right">
+        <span class="row__mag">M{{ item.maxMag | number:'1.1-1' }}</span>
+        <span class="row__lvl" [class]="'row__lvl--' + item.level">
+          {{ item.level === 'high' ? 'Yuksek' : item.level === 'medium' ? 'Orta' : 'Dusuk' }}
+        </span>
+      </div>
+    </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,24 @@
+<div class="panel">
+  <div class="panel__head">
+    <span class="panel__title">Anomali Analizi</span>
+    <span class="badge" [class]="'badge--' + level">
+      {{ level === 'high' ? 'Yuksek' : level === 'medium' ? 'Orta' : 'Normal' }}
+    </span>
+  </div>
+
+  <p class="meta">Son saat: {{ latest }} • Baz: {{ baseline | number:'1.1-1' }}</p>
+  <p class="desc">{{ message }}</p>
+
+  <div class="chart">
+    @for (p of series; track p.hour) {
+    <div class="col">
+      <span class="bar" [class]="barClass(p.count)" [style.height.%]="(p.count / maxValue) * 100"></span>
+    </div>
+    }
+  </div>
+
+  <div class="axis">
+    <span>eski</span>
+    <span>yeni</span>
+  </div>
+</div>

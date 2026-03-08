@@ -1,0 +1,107 @@
+:host {
+    display: block;
+    background-color: transparent;
+    color: var(--text-primary);
+    min-height: calc(100vh - 70px);
+    padding: 2rem;
+    font-family: var(--font-family);
+}
+
+.page-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.content-box {
+    background: var(--bg-secondary);
+    border-radius: 12px;
+    padding: 2.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-primary);
+    text-align: center;
+}
+
+h1 {
+    margin-top: 0;
+    color: var(--text-primary);
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+p {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
+.query-full-placeholder {
+    max-width: 600px;
+    margin: 0 auto 3rem auto;
+    padding: 3rem;
+    background-color: var(--bg-quaternary);
+    border-radius: 8px;
+    border: 1px dashed var(--border-light);
+}
+
+.input-group {
+    display: flex;
+    gap: 1rem;
+}
+
+.input-group input {
+    flex: 1;
+    padding: 1rem;
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    font-size: 1rem;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.input-group input:focus {
+    border-color: var(--accent-purple);
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+.action-btn {
+    padding: 1rem 1.5rem;
+    background: var(--gradient-brand);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    filter: brightness(1.1);
+}
+
+.back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.85rem 1.5rem;
+    background: var(--bg-tertiary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1rem;
+}
+
+.back-btn:hover {
+    background: var(--accent-blue);
+    color: #ffffff;
+    border-color: var(--accent-blue);
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+}
+
+.back-btn:active {
+    transform: scale(0.98);
+}

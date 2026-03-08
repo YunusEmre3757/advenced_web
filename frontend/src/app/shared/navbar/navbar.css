@@ -1,0 +1,204 @@
+.nav {
+    position: sticky;
+    top: 0;
+    z-index: 9999;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    padding: 0 2rem;
+    background: rgba(11, 15, 25, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    gap: 3rem;
+}
+
+/* Brand */
+.nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    cursor: pointer;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.nav-brand-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-purple));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.35);
+}
+
+.nav-brand-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+}
+
+.nav-brand-name span {
+    color: var(--accent-purple);
+}
+
+/* Menu */
+.nav-menu {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex: 1;
+}
+
+.nav-item {
+    padding: 0.45rem 0.9rem;
+    border-radius: 7px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 0.15s, background 0.15s;
+    letter-spacing: -0.01em;
+}
+
+.nav-item:hover {
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-item--active {
+    color: var(--text-primary);
+    background: rgba(59, 130, 246, 0.12);
+}
+
+/* End Actions */
+.nav-end {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-shrink: 0;
+}
+
+.nav-icon-btn {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.nav-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+}
+
+.nav-icon-btn__dot {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--status-red);
+    border: 2px solid var(--bg-primary);
+}
+
+.nav-separator {
+    width: 1px;
+    height: 22px;
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.nav-user {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem 0.25rem 0.25rem;
+    border-radius: 10px;
+    transition: background 0.15s;
+}
+
+.nav-user:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.nav-user__meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+}
+
+.nav-user__name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.nav-user__role {
+    font-size: 0.72rem;
+    color: var(--text-darker);
+    line-height: 1;
+}
+
+.nav-user__avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(139, 92, 246, 0.5);
+}
+
+/* ---- Responsive Navbar ---- */
+@media (max-width: 900px) {
+    .nav {
+        gap: 1.5rem;
+        padding: 0 1.5rem;
+    }
+
+    .nav-item {
+        padding: 0.4rem 0.6rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .nav {
+        padding: 0 1rem;
+        gap: 1rem;
+        justify-content: space-between;
+    }
+
+    /* Mobilde orta linkleri gizle (hamburger menu yapana kadar tasmayi engeller) */
+    .nav-menu {
+        display: none;
+    }
+
+    /* Kullanici ismi ve profil rolu gizle, sadece avatar kalsin */
+    .nav-user__meta {
+        display: none;
+    }
+
+    /* Araya giren cizgiyi gizle */
+    .nav-separator {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .nav-brand-name {
+        display: none;
+        /* Sadece logo iconu kalsin eger ekran cok kucukse */
+    }
+}

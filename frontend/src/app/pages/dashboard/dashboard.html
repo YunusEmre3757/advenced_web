@@ -1,0 +1,111 @@
+<div class="db">
+  <header class="topbar">
+    <div>
+      <h1 class="title">Seismic Command Dashboard</h1>
+      <p class="subtitle">AI destekli deprem izleme, risk skorlamasi ve operasyonel onceliklendirme</p>
+    </div>
+    <div class="topbar__right">
+      <span class="risk-chip" [class]="'risk-chip--' + riskLevel()">{{ riskLabel(riskLevel()) }} Risk</span>
+      <span class="updated">@if (lastUpdated()) { {{ lastUpdated() | date:'dd.MM.yyyy HH:mm:ss' }} } @else { Veri
+        bekleniyor... }</span>
+      <a class="map-link" routerLink="/map">Tam ekran harita</a>
+    </div>
+  </header>
+
+  @if (requestError()) {
+  <div class="notice">{{ requestError() }}</div>
+  }
+
+  <section class="kpi-grid">
+    <app-kpi-card label="24 Saat Olay" [value]="stats().count24h.toString()" sub="toplam deprem" accent="blue" />
+    <app-kpi-card label="En Buyuk" [value]="stats().maxMag.toString()" sub="magnitude" accent="red" />
+    <app-kpi-card label="Ortalama" [value]="stats().avgMag.toString()" sub="magnitude" accent="orange" />
+    <app-kpi-card label="M5+" [value]="stats().activeWarnings.toString()" sub="kritik olay" accent="purple" />
+    @if (nearestEq()) {
+    <app-kpi-card label="En Yakin Olay" [value]="nearestEq()!.distanceKm + ' km'"
+      [sub]="nearestEq()!.location + ' - M' + nearestEq()!.mag" accent="green" />
+    }
+  </section>
+
+  <section class="primary-grid">
+    <article class="panel panel--map">
+      <div class="panel__head">
+        <span class="panel__title">Canli Harita</span>
+        <span class="panel__meta">Dusuk: Yesil • Orta: Turuncu • Yuksek: Kirmizi</span>
+      </div>
+      <div class="map-container" #miniMap></div>
+      <div class="event-chips">
+        @for (eq of strongestEvents(); track eq.id) {
+        <div class="event-chip">
+          <span class="event-chip__loc">{{ eq.location }}</span>
+          <span class="event-chip__mag">M{{ normalizedMag(eq) | number:'1.1-1' }}</span>
+        </div>
+        }
+      </div>
+    </article>
+
+    <aside class="panel copilot">
+      <div class="panel__head">
+        <span class="panel__title">AI Copilot</span>
+      </div>
+      <p class="copilot__headline">{{ aiHeadline() }}</p>
+      <ul class="copilot__actions">
+        @for (a of aiActions(); track a) {
+        <li>{{ a }}</li>
+        }
+      </ul>
+      <app-hourly-anomaly [series]="hourlySeries()" [latest]="anomaly().latest" [baseline]="anomaly().baseline"
+        [level]="anomaly().level" [message]="anomaly().message" />
+      <app-ai-insights [items]="aiInsights()"></app-ai-insights>
+    </aside>
+  </section>
+
+  <section class="analytics-grid">
+    <div class="analytics-row">
+      <app-mag-distribution [data]="magDistribution()"></app-mag-distribution>
+      <app-weekly-chart [data]="trendData()" [activeRange]="trendRange()" [activeMag]="trendMagFilter()"
+        (rangeChange)="onTrendRangeChange($event)" (magChange)="onTrendMagChange($event)"></app-weekly-chart>
+    </div>
+    <div class="analytics-row analytics-row--single">
+      <app-risk-city-list [items]="cityRiskList()"></app-risk-city-list>
+    </div>
+  </section>
+
+  <section class="panel table-panel">
+    <div class="panel__head">
+      <span class="panel__title">Son Olaylar</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Saat</th>
+            <th>Konum</th>
+            <th>Mag</th>
+            <th>Derinlik</th>
+            <th>Gecen Sure</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (eq of earthquakes().slice(0, 32); track eq.id) {
+          <tr>
+            <td class="muted">{{ eq.date | date:'dd.MM HH:mm' }}</td>
+            <td class="loc">{{ eq.location }}</td>
+            <td>
+              <span class="mag" [class.mag--high]="normalizedMag(eq) >= 5"
+                [class.mag--mid]="normalizedMag(eq) >= 3 && normalizedMag(eq) < 5"
+                [class.mag--low]="normalizedMag(eq) < 3">
+                {{ normalizedMag(eq) | number:'1.1-1' }}
+              </span>
+            </td>
+            <td class="muted">{{ eq.depth | number:'1.0-0' }} km</td>
+            <td class="muted">{{ relativeTime(eq.date) }}</td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer class="footer">Veri Kaynagi: Kandilli Rasathanesi</footer>
+</div>
