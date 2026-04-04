@@ -311,6 +311,142 @@
     }
   </div>
 
+  @if (crewPanelOpen()) {
+  <div class="glass-panel crew-panel">
+    <div class="crew-header">
+      <span class="crew-title">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"></path>
+        </svg>
+        Crew AI — Derin Deprem Analizi
+      </span>
+      <button class="rd-close" (click)="closeCrewPanel()">x</button>
+    </div>
+
+    @if (crewLoading()) {
+    <div class="crew-loading">
+      <div class="crew-spinner"></div>
+      <div class="crew-loading-text">
+        <div>4 uzman ajan çalışıyor...</div>
+        <div class="crew-loading-sub">Veri Toplayıcı → Fay Analisti → Risk Değerlendirici → Rapor Yazarı</div>
+      </div>
+    </div>
+    }
+
+    @if (crewError()) {
+    <div class="crew-error">
+      <strong>Bağlantı Hatası</strong><br>
+      {{ crewError() }}
+      <div class="crew-error-hint">
+        Crew servisini başlatmak için terminale şunu yaz:<br>
+        <code>cd crew && uvicorn api:app --port 8001</code>
+      </div>
+    </div>
+    }
+
+    @if (crewResult()) {
+    <div class="crew-result">
+
+      <!-- Tehlike Rozeti -->
+      <div class="crew-hazard-row">
+        <span class="crew-hazard-badge" [style.background]="crewHazardColor(crewResult()!.hazardLevel)">
+          {{ crewHazardLabel(crewResult()!.hazardLevel) }}
+        </span>
+        <span class="crew-risk-score">Tehlike: {{ crewHazardLabel(crewResult()!.hazardLevel) }}</span>
+      </div>
+
+      <!-- Fay Bilgisi -->
+      <div class="crew-info-grid">
+        <div class="crew-info-card">
+          <div class="crew-info-label">En Yakın Fay</div>
+          <div class="crew-info-value">{{ crewResult()!.nearestFault }}</div>
+        </div>
+        <div class="crew-info-card">
+          <div class="crew-info-label">Mesafe</div>
+          <div class="crew-info-value">{{ crewResult()!.distanceKm | number:'1.1-1' }} km</div>
+        </div>
+        <div class="crew-info-card">
+          <div class="crew-info-label">Fay Tipi</div>
+          <div class="crew-info-value">{{ crewResult()!.faultType }}</div>
+        </div>
+        <div class="crew-info-card">
+          <div class="crew-info-label">Kayma Hızı</div>
+          <div class="crew-info-value">{{ crewResult()!.slipRate }}</div>
+        </div>
+        <div class="crew-info-card">
+          <div class="crew-info-label">Zemin Sınıfı</div>
+          <div class="crew-info-value">{{ crewResult()!.soilClass }}</div>
+        </div>
+      </div>
+
+      <!-- Sismik Boşluk Analizi -->
+      <div class="crew-gap-card" [class.crew-gap--warning]="crewResult()!.seismicGapStatus === 'UZUN_SESSIZLIK'"
+           [class.crew-gap--info]="crewResult()!.seismicGapStatus === 'YAKIN_KIRILMA'"
+           [class.crew-gap--ok]="crewResult()!.seismicGapStatus === 'DUZENLI_AKTIVITE'">
+        <div class="crew-gap-title">
+          @if (crewResult()!.seismicGapStatus === 'UZUN_SESSIZLIK') {
+            ⚠ Sismik Boşluk Tespit Edildi
+          } @else if (crewResult()!.seismicGapStatus === 'YAKIN_KIRILMA') {
+            ↻ Yakın Zamanda Kırılma Oldu
+          } @else if (crewResult()!.seismicGapStatus === 'DUZENLI_AKTIVITE') {
+            ✓ Düzenli Sismik Aktivite
+          } @else {
+            ○ Tarihsel Veri
+          }
+        </div>
+        <div class="crew-gap-body">{{ crewResult()!.seismicGapNote }}</div>
+        @if (crewResult()!.historicalSummary) {
+        <div class="crew-gap-history">{{ crewResult()!.historicalSummary }}</div>
+        }
+      </div>
+
+      <!-- Ajan Raporları -->
+      <div class="crew-agents">
+
+        <details class="crew-agent-section" open>
+          <summary class="crew-agent-title">
+            <span class="crew-agent-badge crew-agent-badge--1">Ajan 1</span>
+            Veri Toplayıcı — Sismik Bağlam
+          </summary>
+          <div class="crew-agent-body">{{ crewResult()!.dataCollectorSummary || 'Veri yok.' }}</div>
+        </details>
+
+        <details class="crew-agent-section" open>
+          <summary class="crew-agent-title">
+            <span class="crew-agent-badge crew-agent-badge--2">Ajan 2</span>
+            Fay Analisti — Fay Korelasyonu
+          </summary>
+          <div class="crew-agent-body">{{ crewResult()!.faultAnalystReport || 'Rapor yok.' }}</div>
+        </details>
+
+        <details class="crew-agent-section" open>
+          <summary class="crew-agent-title">
+            <span class="crew-agent-badge crew-agent-badge--3">Ajan 3</span>
+            Risk Değerlendirici — Kentsel Risk
+          </summary>
+          <div class="crew-agent-body">{{ crewResult()!.riskAssessorReport || 'Rapor yok.' }}</div>
+        </details>
+
+        <details class="crew-agent-section" open>
+          <summary class="crew-agent-title">
+            <span class="crew-agent-badge crew-agent-badge--4">Ajan 4</span>
+            Rapor Yazarı — Genel Değerlendirme
+          </summary>
+          <div class="crew-agent-body">{{ crewResult()!.finalReport || 'Rapor yok.' }}</div>
+        </details>
+
+      </div>
+
+      <div class="crew-footer">
+        Üretim tarihi: {{ crewResult()!.reportDate }} &nbsp;·&nbsp;
+        Veri: KOERI (Kandilli) / MTA Fay Veritabanı
+      </div>
+    </div>
+    }
+  </div>
+  }
+
   @if (lastEq()) {
   <div class="glass-panel map-status">
     <div class="ms-live">

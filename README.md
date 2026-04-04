@@ -8,6 +8,7 @@ Türkiye için AI destekli deprem izleme ve risk değerlendirme sistemi. Platfor
 - **İnteraktif Harita** – Leaflet/MapLibre tabanlı harita; deprem işaretçileri (büyüklüğe göre renk kodlu), MTA fay hattı katmanları, zemin sınıflandırma zonları (ZA–ZF)
 - **Dashboard Analitiği** – KPI kartları, 7 günlük trend grafiği, büyüklük dağılımı, en riskli şehirler, saatlik anomali tespiti
 - **AI Copilot** – Groq LLM ile deprem analizi, fay-deprem korelasyonu, risk değerlendirmesi, deprem önlemleri ve Türkçe doğal dil soru-cevap
+- **CrewAI Pipeline** – 4 uzman ajan (Veri Toplayıcı, Fay Analisti, Risk Değerlendirici, Rapor Yazarı) ile otomatik deprem durum raporu üretimi
 - **Jeo-uzamsal Arama & Filtreleme** – Konum araması, çoklu parametre filtresi, dinamik viewport tabanlı veri yükleme
 
 ## Sayfalar
@@ -113,6 +114,77 @@ Frontend `http://localhost:4200` adresinde çalışır.
 ## Planlama Dokümanı
 
 AI Agent Planlama Dokümanı: [docs/AI_AGENT_PLANNING.md](docs/AI_AGENT_PLANNING.md)
+
+## CrewAI Entegrasyonu
+
+Seismic Command, [ed-donner/agents](https://github.com/ed-donner/agents) deposundaki `engineering_team` yapısından ilham alan bir **CrewAI multi-agent pipeline** içerir. Pipeline, backend API'nin ürettiği canlı deprem verisini alarak tam otomatik bir durum raporu (`report.md`) üretir.
+
+### Ajan Yapısı
+
+| Ajan | Rol | Model |
+|------|-----|-------|
+| `data_collector` | KOERI + MTA verilerini çeker, JSON özeti üretir | GPT-4o |
+| `fault_analyst` | Depremleri aktif faylara eşler, tehlike seviyesi atar | GPT-4o |
+| `risk_assessor` | Zemin sınıfına göre şehir risk matrisi oluşturur | GPT-4o |
+| `report_writer` | Türkçe/İngilizce çift dilli raporu yazar → `report.md` | GPT-4o |
+
+### Pipeline Akışı (Sequential)
+
+```
+collect_data_task → fault_analysis_task → risk_assessment_task → write_report_task
+```
+
+### Kurulum ve Çalıştırma
+
+**Gereksinim:** Python 3.10–3.12, `uv` paket yöneticisi ve çalışır durumda backend (`localhost:8080`).
+
+```bash
+# 1. Backend'i başlat
+cd backend && ./mvnw spring-boot:run
+
+# 2. Crew dizinine geç
+cd ../crew
+
+# 3. Ortam değişkenlerini ayarla
+cp .env.example .env
+# .env dosyasına OPENAI_API_KEY ekle
+
+# 4. Bağımlılıkları yükle
+pip install crewai[tools]
+
+# 5. Çalıştır (varsayılan: son 24 saat, M≥2.0)
+crewai run
+
+# veya özel pencere
+python -m seismic_crew.main --hours 48 --min-magnitude 3.0
+```
+
+### Crew Proje Yapısı
+
+```
+crew/
+├── pyproject.toml
+├── .env.example
+└── src/seismic_crew/
+    ├── __init__.py
+    ├── crew.py          # @CrewBase sınıfı — ajan + görev tanımları
+    ├── main.py          # kickoff() giriş noktası
+    └── config/
+        ├── agents.yaml  # 4 ajanın rol/hedef/backstory tanımları
+        └── tasks.yaml   # 4 sıralı görev + context bağımlılıkları
+```
+
+### Üretilen Rapor Yapısı (`report.md`)
+
+```
+# Seismic Intelligence Report — <tarih>
+## Executive Summary / Yönetici Özeti      (3 madde, TR + EN)
+## Data Window / Veri Penceresi
+## Fault-Correlation Analysis / Fay Korelasyon Analizi  (tablo)
+## City Risk Matrix / Şehir Risk Matrisi                (tablo)
+## Recommended Actions / Önerilen Eylemler
+## Conclusion / Sonuç                      (güven seviyesi: LOW/MEDIUM/HIGH)
+```
 
 ## Lisans
 

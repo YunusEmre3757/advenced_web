@@ -1,0 +1,192 @@
+collect_data_task:
+  description: >
+    We are analyzing a SPECIFIC FOCUS EARTHQUAKE:
+      - Event ID   : {event_id}
+      - Location   : {event_location}
+      - Magnitude  : M{event_magnitude}
+      - Depth      : {event_depth_km} km
+      - Coordinates: lat={event_latitude}, lon={event_longitude}
+
+    DO NOT write any code. DO NOT use tools. Just produce the output directly.
+
+    Use the fallback_earthquakes from inputs for nearby_events.
+    Assume fault_segments_count = 12 (typical for this region).
+
+    Output ONLY a plain JSON object — no code blocks, no prose, no explanation.
+  expected_output: >
+    Plain JSON (no markdown, no ```json blocks) with these exact keys:
+    focus_event (dict with id/location/magnitude/depthKm/lat/lon),
+    total_context_events (integer),
+    max_magnitude (float),
+    avg_magnitude (float),
+    depth_stats (dict with min/max/avg),
+    nearby_events (list of up to 3 events from fallback_earthquakes),
+    fault_segments_count (integer).
+    Example: {"focus_event": {...}, "total_context_events": 57, ...}
+  agent: data_collector
+
+fault_analysis_task:
+  description: >
+    Perform a DETAILED fault-correlation analysis focused on the FOCUS EARTHQUAKE.
+
+    Focus event: {event_location} (M{event_magnitude}, {event_depth_km} km deep,
+    lat={event_latitude}, lon={event_longitude})
+
+    Steps:
+      1. Identify the nearest active fault segment using fault data from
+         collect_data_task. List top 5 nearest faults with:
+           - fault name, distance_km, fault type, slip rate, rake angle
+
+         Known slip rates for major Turkey faults (use these if GeoJSON lacks data):
+           - North Anatolian Fault Zone (NAFZ): 20-25 mm/yr (dextral strike-slip)
+           - East Anatolian Fault Zone (EAFZ): 6-10 mm/yr (sinistral strike-slip)
+           - Dead Sea Fault Zone: 3-6 mm/yr (sinistral)
+           - Aegean normal faults: 1-4 mm/yr (normal)
+           - Western Anatolia grabens: 2-5 mm/yr (normal)
+           - Unknown/unnamed segments: "Tahmini <2 mm/yr"
+
+      2. Classify the FOCUS EVENT hazard level by fault proximity:
+           - < 5 km   → CRITICAL
+           - 5–15 km  → HIGH
+           - 15–35 km → MODERATE
+           - > 35 km  → LOW
+
+      3. SEISMIC HISTORY ANALYSIS — use the pre-fetched USGS data provided
+         in the input variable: {usgs_historical_context}
+
+         THIS DATA IS REAL — fetched directly from USGS FDSN API before
+         you were called. You MUST use ONLY the dates, magnitudes, and
+         locations from this data. DO NOT invent or estimate any historical
+         earthquakes. If the data says "Son M>=5.5: 2024-04-18 M5.6", then
+         use exactly that — never substitute your own guess.
+
+         From {usgs_historical_context} extract and report:
+           a) Total M≥4.5 events since 1990
+           b) Largest historical earthquake (magnitude + date + location)
+           c) Last M≥5.5 event (date, magnitude)
+           d) SEISMIC_GAP_STATUS — copy it directly from the context:
+              UZUN_SESSIZLIK / YAKIN_KIRILMA / DUZENLI_AKTIVITE
+           e) SEISMIC_GAP_NOTE — copy it directly from the context
+
+      4. Analyze current activity pattern from nearby_events (collect_data_task).
+
+      5. Write a 4–5 sentence expert interpretation in Turkish covering:
+         - Fault relationship and distance
+         - Historical seismicity pattern
+         - Seismic gap or recent activity assessment
+         - What this means for current risk
+         - IMPORTANT: Always state "Bu yorum mevcut veriye dayalıdır.
+           Kesin risk değerlendirmesi için AFAD/KOERI uzmanlarına başvurunuz."
+
+  expected_output: >
+    A structured report with these exact sections:
+    - HAZARD_LEVEL: CRITICAL / HIGH / MODERATE / LOW
+    - NEAREST_FAULT: fault name
+    - DISTANCE_KM: number
+    - FAULT_TYPE: fault mechanism type
+    - SLIP_RATE: e.g. "0.2-0.4 mm/yr"
+    - TOP_5_FAULTS: markdown table (fault | dist_km | type | slip_rate | rake)
+    - HISTORICAL_SUMMARY: "Son 35 yılda X adet M≥4.5 deprem. En büyük: MY.Y (YYYY).
+      Son M≥5.5: YYYY-MM-DD. Ortalama tekrarlanma: ~X yıl."
+    - SEISMIC_GAP_STATUS: one of "UZUN_SESSIZLIK" / "YAKIN_KIRILMA" / "DUZENLI_AKTIVITE"
+    - SEISMIC_GAP_NOTE: 1-2 sentence explanation in Turkish
+    - FAULT_ACTIVITY: markdown table (fault | event_count | max_mag | avg_dist_km)
+    - INTERPRETATION: 4–5 sentence expert narrative in Turkish with disclaimer
+  agent: fault_analyst
+  context:
+    - collect_data_task
+
+risk_assessment_task:
+  description: >
+    Perform a LOCAL RISK ASSESSMENT for the area around the focus earthquake:
+    {event_location} (M{event_magnitude}, lat={event_latitude}, lon={event_longitude})
+
+    Steps:
+      1. Fetch soil classification data around the focus event from:
+         http://localhost:8080/api/soil-zones?minLon={event_longitude_minus1}&minLat={event_latitude_minus1}&maxLon={event_longitude_plus1}&maxLat={event_latitude_plus1}
+         If unavailable, estimate based on known Turkey soil maps.
+      2. Determine the dominant soil class (ZA–ZF) at/near the epicenter:
+           - ZA/ZB: rock, low amplification (Vs30 > 500 m/s)
+           - ZC: dense soil (Vs30 360–500)
+           - ZD: medium soil (Vs30 180–360) — amplification risk
+           - ZE/ZF: soft soil, HIGH amplification — significant hazard
+      3. Identify the nearest settlement / district (use the location name).
+      4. Calculate composite risk score 1–10:
+           risk = base_mag_score + soil_amplification + fault_proximity_score
+           where base_mag_score: M<3=1, M3-4=3, M4-5=5, M5+=7
+           soil: ZA/ZB=0, ZC=+1, ZD=+2, ZE=+3, ZF=+4
+           fault proximity: CRITICAL=+3, HIGH=+2, MODERATE=+1, LOW=+0
+      5. List 3 specific public safety actions for local authorities.
+      6. Write a 2-sentence risk summary in Turkish for the public.
+  expected_output: >
+    A structured report with:
+    - SOIL_CLASS: ZA/ZB/ZC/ZD/ZE/ZF
+    - VS30_RANGE: e.g. "180-360 m/s"
+    - RISK_SCORE: number 1-10
+    - RISK_LEVEL: LOW / MODERATE / HIGH / CRITICAL
+    - NEAREST_SETTLEMENT: city or district name
+    - SAFETY_ACTIONS: numbered list of 3 actions in Turkish
+    - PUBLIC_SUMMARY: 2-sentence Turkish summary for citizens
+  agent: risk_assessor
+  context:
+    - collect_data_task
+    - fault_analysis_task
+
+write_report_task:
+  description: >
+    Compile all upstream analysis into a structured JSON-compatible report
+    for the focus earthquake: {event_location} (M{event_magnitude}).
+
+    The report MUST follow this EXACT structure — use these exact section headers:
+
+    ## HAZARD_LEVEL
+    (one word: CRITICAL / HIGH / MODERATE / LOW — from fault analyst)
+
+    ## NEAREST_FAULT
+    (fault name — from fault analyst)
+
+    ## DISTANCE_KM
+    (number — from fault analyst)
+
+    ## FAULT_TYPE
+    (e.g. Sinistral-Normal — from fault analyst)
+
+    ## SOIL_CLASS
+    (ZA/ZB/ZC/ZD/ZE/ZF — from risk assessor)
+
+    ## RISK_SCORE
+    (number 1-10 — from risk assessor)
+
+    ## DATA_COLLECTOR_SUMMARY
+    (2-3 sentence summary of seismic context: total events, max magnitude,
+    depth range, nearby activity — in Turkish)
+
+    ## FAULT_ANALYST_REPORT
+    (3-4 sentence expert interpretation of the fault relationship — in Turkish.
+    Include: which fault, what type, how close, what it means for this earthquake)
+
+    ## RISK_ASSESSOR_REPORT
+    (2-3 sentence local risk assessment — in Turkish.
+    Include: soil class, risk score, recommended actions)
+
+    ## FINAL_REPORT
+    Write ONE comprehensive 5–8 sentence bilingual report: Turkish paragraphs FIRST,
+    then English paragraphs. Do NOT repeat the same content twice. Do NOT copy
+    DATA_COLLECTOR_SUMMARY, FAULT_ANALYST_REPORT, or RISK_ASSESSOR_REPORT verbatim.
+    Synthesize into a single narrative covering: event details, fault relationship,
+    soil conditions, hazard level, what residents should know, and official disclaimer.
+
+    ## CONFIDENCE_LEVEL
+    (LOW / MEDIUM / HIGH — based on data quality)
+
+    Save as report.md.
+  expected_output: >
+    A markdown document with the exact section headers above, saved as
+    report.md. Each section must be clearly separated. The FINAL_REPORT
+    section must be at least 150 words, bilingual.
+  agent: report_writer
+  context:
+    - collect_data_task
+    - fault_analysis_task
+    - risk_assessment_task
+  output_file: report.md

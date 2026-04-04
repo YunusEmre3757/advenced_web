@@ -1,0 +1,9 @@
+.env
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+dist/
+build/
+report.md
+training.pkl

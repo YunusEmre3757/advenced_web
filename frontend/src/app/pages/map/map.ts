@@ -14,6 +14,7 @@ import { Earthquake, EarthquakeApi } from '../../core/earthquake-api';
 import { FaultLineApi, FaultLineGeoJson } from '../../core/fault-line-api';
 import { SoilZoneApi, SoilZoneGeoJson } from '../../core/soil-zone-api';
 import { AiApi } from '../../core/ai-api';
+import { CrewApi, CrewAnalyzeResult } from '../../core/crew-api';
 
 type AiRole = 'user' | 'assistant';
 interface AiMessage {
@@ -88,6 +89,12 @@ export class Map implements OnInit, OnDestroy, AfterViewInit {
   aiInput = signal<string>('');
   aiLoading = signal<boolean>(false);
   aiError = signal<string | null>(null);
+
+  // Crew AI derin analiz
+  crewLoading = signal<boolean>(false);
+  crewResult = signal<CrewAnalyzeResult | null>(null);
+  crewError = signal<string | null>(null);
+  crewPanelOpen = signal<boolean>(false);
   selectedEq = computed(() => {
     const id = this.selectedEventId();
     if (!id) return null;
@@ -106,7 +113,8 @@ export class Map implements OnInit, OnDestroy, AfterViewInit {
     private readonly earthquakeApi: EarthquakeApi,
     private readonly faultLineApi: FaultLineApi,
     private readonly soilZoneApi: SoilZoneApi,
-    private readonly aiApi: AiApi
+    private readonly aiApi: AiApi,
+    private readonly crewApi: CrewApi
   ) {}
 
   ngOnInit(): void {
@@ -638,7 +646,10 @@ export class Map implements OnInit, OnDestroy, AfterViewInit {
       .setHTML(
         `<div class="eqp-title">${location}</div>` +
         `<div class="eqp-meta">M${mag} | ${depth} km | ${dateText}</div>` +
-        `<button class="eqp-ai-btn" type="button">AI ile analiz et</button>`
+        `<div class="eqp-btn-row">` +
+        `<button class="eqp-ai-btn" type="button">AI Sohbet</button>` +
+        `<button class="eqp-crew-btn" type="button">Crew Derin Analiz</button>` +
+        `</div>`
       )
       .addTo(this.map);
 
@@ -651,17 +662,80 @@ export class Map implements OnInit, OnDestroy, AfterViewInit {
     if (aiBtn) {
       aiBtn.onclick = () => this.openAiFromSelectedEvent(location);
     }
+    const crewBtn = popupEl?.querySelector('.eqp-crew-btn') as HTMLButtonElement | null;
+    if (crewBtn) {
+      const eq = this.earthquakes().find(e => e.id === eventId);
+      if (eq) crewBtn.onclick = () => this.runCrewAnalysis(eq);
+    }
   }
 
   private openAiFromSelectedEvent(locationLabel: string): void {
     const selected = this.selectedEq();
     const fallbackLabel = selected?.location ?? locationLabel;
+    this.crewPanelOpen.set(false);
     this.aiDockOpen.set(true);
     this.sendAiMessage(
       `Secili depremi analiz et: ${fallbackLabel}. ` +
       `Bu depremin hangi fayla iliskili olabilecegini, mesafeyi, belirsizlik nedenlerini ` +
       `ve bu fayin temel ozelliklerini (kayma tipi/hiz/son hareket) veriyle ozetle.`
     );
+  }
+
+  runCrewAnalysis(eq: Earthquake): void {
+    this.crewResult.set(null);
+    this.crewError.set(null);
+    this.crewLoading.set(true);
+    this.crewPanelOpen.set(true);
+    this.aiDockOpen.set(false);
+    if (this.eqPopup) this.eqPopup.remove();
+
+    this.crewApi.analyze({
+      eventId: eq.id,
+      location: eq.location,
+      magnitude: eq.mag,
+      depthKm: eq.depth,
+      latitude: eq.lat,
+      longitude: eq.lng,
+      hours: this.timeWindowHours(),
+      minMagnitude: this.minMag(),
+    }).subscribe({
+      next: (result) => {
+        this.crewLoading.set(false);
+        if (result.error) {
+          this.crewError.set(result.message ?? 'Crew servisi çalışmıyor.');
+        } else {
+          this.crewResult.set(result);
+        }
+      },
+      error: (err) => {
+        this.crewLoading.set(false);
+        this.crewError.set('Crew AI bağlantısı kurulamadı: ' + (err?.message ?? err));
+      }
+    });
+  }
+
+  closeCrewPanel(): void {
+    this.crewPanelOpen.set(false);
+  }
+
+  crewHazardColor(level: string): string {
+    switch (level) {
+      case 'CRITICAL': return '#ef4444';
+      case 'HIGH':     return '#f97316';
+      case 'MODERATE': return '#eab308';
+      case 'LOW':      return '#22c55e';
+      default:         return '#94a3b8';
+    }
+  }
+
+  crewHazardLabel(level: string): string {
+    switch (level) {
+      case 'CRITICAL': return 'KRİTİK';
+      case 'HIGH':     return 'YÜKSEK';
+      case 'MODERATE': return 'ORTA';
+      case 'LOW':      return 'DÜŞÜK';
+      default:         return 'BELİRSİZ';
+    }
   }
 
   private openFaultPopup(event: maplibregl.MapLayerMouseEvent): void {
