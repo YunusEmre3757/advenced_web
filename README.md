@@ -107,13 +107,7 @@ Frontend `http://localhost:4200` adresinde çalışır.
 │   ├── soil/                 # Zemin zonu servisi
 │   └── ai/                   # Groq AI entegrasyonu
 │
-└── docs/
-    └── AI_AGENT_PLANNING.md  # AI Agent planlama dokümanı
 ```
-
-## Planlama Dokümanı
-
-AI Agent Planlama Dokümanı: [docs/AI_AGENT_PLANNING.md](docs/AI_AGENT_PLANNING.md)
 
 ## CrewAI Entegrasyonu
 
