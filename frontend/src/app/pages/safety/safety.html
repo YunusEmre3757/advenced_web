@@ -1,0 +1,80 @@
+<section class="safety-shell">
+  <header class="safety-header">
+    <div>
+      <h1>Guvendeyim</h1>
+      <p>Tek dokunusla aile uyelerine durumunu bildir. Pushover + email kanallarina otomatik fan-out yapilir.</p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <p class="notice notice--warn">{{ error() }}</p>
+  }
+
+  <form class="safety-form" [formGroup]="noteForm" (ngSubmit)="send('SAFE')">
+    <label>
+      Not (opsiyonel)
+      <textarea formControlName="note" maxlength="500" placeholder="Aileye iletmek istedigin kisa bilgi..."></textarea>
+    </label>
+    <label>
+      Event ID (opsiyonel, deprem detay sayfasindan kopyala)
+      <input type="text" formControlName="eventId" placeholder="ornegin koeri-20260416-123456">
+    </label>
+
+    <div class="location-row">
+      <button type="button" class="ghost" (click)="captureLocation()" [disabled]="locating()">
+        {{ locating() ? 'Aliniyor...' : 'Konumumu ekle' }}
+      </button>
+      @if (locationCaptured(); as loc) {
+        <span class="location-chip">{{ loc.lat | number:'1.4-4' }}, {{ loc.lng | number:'1.4-4' }}</span>
+      }
+    </div>
+
+    <div class="button-row">
+      <button type="submit" class="btn btn--safe" [disabled]="submitting() !== null">
+        {{ submitting() === 'SAFE' ? 'Gonderiliyor...' : 'Guvendeyim' }}
+      </button>
+      <button type="button" class="btn btn--help" (click)="send('NEEDS_HELP')" [disabled]="submitting() !== null">
+        {{ submitting() === 'NEEDS_HELP' ? 'Gonderiliyor...' : 'Yardim lazim' }}
+      </button>
+    </div>
+  </form>
+
+  @if (lastFanout(); as fanout) {
+    @if (fanout.length === 0) {
+      <p class="notice">Aile listesi bos veya bildirim adresi yok. Profil sayfasindan ekleyebilirsin.</p>
+    } @else {
+      <section class="fanout">
+        <h2>Son bildirim sonuclari</h2>
+        <ul>
+          @for (row of fanout; track $index) {
+            <li>
+              <strong>{{ row.recipientLabel }}</strong>
+              <span class="channel-pill">{{ row.channel }}</span>
+              <span class="status-pill" [class.status-pill--ok]="row.status === 'SENT' || row.status === 'DRY_RUN'">{{ row.status }}</span>
+              <small>{{ row.message }}</small>
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  }
+
+  <section class="history">
+    <h2>Gecmis check-in</h2>
+    @if (history().length === 0) {
+      <p class="notice">Henuz bir check-in kaydin yok.</p>
+    } @else {
+      <ul>
+        @for (row of history(); track row.id) {
+          <li>
+            <span class="status-pill" [class.status-pill--ok]="row.status === 'SAFE'" [class.status-pill--warn]="row.status === 'NEEDS_HELP'">
+              {{ statusLabel(row.status) }}
+            </span>
+            <time>{{ row.createdAt | date:'dd.MM.yyyy HH:mm' }}</time>
+            @if (row.note) { <small>{{ row.note }}</small> }
+          </li>
+        }
+      </ul>
+    }
+  </section>
+</section>

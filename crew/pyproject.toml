@@ -6,7 +6,6 @@ build-backend = "hatchling.build"
 name = "seismic-crew"
 version = "0.1.0"
 description = "CrewAI multi-agent pipeline for Seismic Command — Turkey earthquake analysis"
-readme = "README.md"
 requires-python = ">=3.10,<3.13"
 dependencies = [
     "crewai[tools]>=0.80.0,<1.0.0",
@@ -14,6 +13,7 @@ dependencies = [
 
 [project.scripts]
 seismic_crew = "seismic_crew.main:run"
+run_crew = "seismic_crew.main:run"
 
 [tool.crewai]
 type = "crew"

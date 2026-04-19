@@ -1,0 +1,33 @@
+<section class="heat-shell">
+  <header class="heat-header">
+    <div>
+      <span class="eyebrow">Yogunluk analizi</span>
+      <h1>Deprem yogunluk haritasi</h1>
+      <p>Son donem Kandilli kayitlarinin harita uzerinde yogunluk dagilimi.</p>
+    </div>
+    <div class="stat">
+      <strong>{{ count() }}</strong>
+      <span>kayit</span>
+    </div>
+  </header>
+
+  <div class="heat-controls">
+    <div class="group">
+      <span class="g-label">Zaman</span>
+      <button type="button" [class.active]="hours() === 24" (click)="setHours(24)">24 saat</button>
+      <button type="button" [class.active]="hours() === 72" (click)="setHours(72)">3 gun</button>
+      <button type="button" [class.active]="hours() === 168" (click)="setHours(168)">1 hafta</button>
+    </div>
+    <div class="group">
+      <span class="g-label">Min buyukluk</span>
+      <button type="button" [class.active]="minMag() === 1.0" (click)="setMinMag(1.0)">M1+</button>
+      <button type="button" [class.active]="minMag() === 2.0" (click)="setMinMag(2.0)">M2+</button>
+      <button type="button" [class.active]="minMag() === 3.0" (click)="setMinMag(3.0)">M3+</button>
+    </div>
+  </div>
+
+  @if (loading()) { <p class="notice">Yukleniyor...</p> }
+  @if (error()) { <p class="notice notice--err">{{ error() }}</p> }
+
+  <div #heatMap class="heat-map"></div>
+</section>

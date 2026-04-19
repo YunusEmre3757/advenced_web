@@ -1,0 +1,271 @@
+<main class="profile-page">
+  <header class="profile-header">
+    <div>
+      <p class="eyebrow">Kisisel hazirlik</p>
+      <h1>Profil ve bildirim bilgileri</h1>
+      <p class="intro">Konumlarini, ulasilacak kisileri ve deprem deneyimlerini burada tut.</p>
+    </div>
+    <a class="header-link" routerLink="/map">Haritaya don</a>
+  </header>
+
+  @if (error()) {
+    <div class="alert">{{ error() }}</div>
+  }
+
+  <section class="profile-panel profile-panel--wide notification-panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Pushover bildirimleri</h2>
+        <p>Konum yaricapina giren depremler icin sana ve istersen aile uyelerine anlik bildirim gonderilir.</p>
+      </div>
+      <span class="count">{{ notificationForm.controls.pushoverEnabled.value ? 'Acik' : 'Kapali' }}</span>
+    </div>
+
+    <form class="profile-form profile-form--notifications" [formGroup]="notificationForm" (ngSubmit)="saveNotificationPreference()">
+      <label class="check-line">
+        <input type="checkbox" formControlName="pushoverEnabled">
+        Pushover uyarilarini ac
+      </label>
+      <label>
+        Pushover user key
+        <input type="text" formControlName="pushoverUserKey" placeholder="Pushover hesabindaki user key">
+      </label>
+      <label class="check-line">
+        <input type="checkbox" formControlName="emailEnabled">
+        Email uyarilarini ac
+      </label>
+      <label>
+        Email adresi
+        <input type="email" formControlName="emailAddress" placeholder="ornek@email.com">
+      </label>
+      <div class="form-row form-row--center">
+        <label>
+          Minimum magnitude
+          <input type="number" step="0.1" formControlName="minMagnitude">
+        </label>
+        <label class="check-line">
+          <input type="checkbox" formControlName="notifyFamilyMembers">
+          Aile uyelerine de gonder
+        </label>
+      </div>
+      <p class="helper-text">Backend app token yoksa kayit DRY_RUN olarak tutulur; token eklendiginde ayni ayarlar gercek Pushover gonderir.</p>
+      <div class="form-row form-row--center">
+        <button class="action-btn" type="submit" [disabled]="saving() === 'notifications'">
+          {{ saving() === 'notifications' ? 'Kaydediliyor...' : 'Bildirim ayarlarini kaydet' }}
+        </button>
+        <button
+          class="action-btn action-btn--ghost"
+          type="button"
+          (click)="sendTestNotification()"
+          [disabled]="saving() === 'test' || !canSendTest()">
+          {{ saving() === 'test' ? 'Gonderiliyor...' : 'Test bildirimi gonder' }}
+        </button>
+      </div>
+      @if (testResult(); as result) {
+        <div class="test-results">
+          @for (channel of result.results; track channel.channel) {
+            <p class="helper-text" [class.helper-text--ok]="channel.delivered" [class.helper-text--warn]="!channel.delivered">
+              <strong>{{ channel.channel }}</strong> · [{{ channel.status }}] {{ channel.message }}
+            </p>
+          }
+        </div>
+      }
+    </form>
+  </section>
+
+  <section class="profile-grid">
+    <article class="profile-panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Konumlar</h2>
+          <p>Uyari eslestirmesi icin ev, is veya okul konumlarini ekle.</p>
+        </div>
+        <span class="count">{{ locations().length }}</span>
+      </div>
+
+      <form class="profile-form" [formGroup]="locationForm" (ngSubmit)="addLocation()">
+        <label>
+          Etiket
+          <input type="text" formControlName="label" placeholder="Ev">
+        </label>
+        <div class="form-row">
+          <label>
+            Il
+            <input type="text" formControlName="city" placeholder="Istanbul">
+          </label>
+          <label>
+            Ilce
+            <input type="text" formControlName="district" placeholder="Kadikoy">
+          </label>
+        </div>
+        <div class="form-row">
+          <label>
+            Enlem
+            <input type="number" step="0.000001" formControlName="latitude">
+          </label>
+          <label>
+            Boylam
+            <input type="number" step="0.000001" formControlName="longitude">
+          </label>
+        </div>
+        <div class="form-row form-row--center">
+          <label>
+            Yari cap km
+            <input type="number" step="1" formControlName="radiusKm">
+          </label>
+          <label class="check-line">
+            <input type="checkbox" formControlName="primaryLocation">
+            Birincil konum
+          </label>
+        </div>
+        <button class="action-btn" type="submit" [disabled]="saving() === 'location'">
+          {{ saving() === 'location' ? 'Kaydediliyor...' : 'Konum ekle' }}
+        </button>
+      </form>
+
+      <div class="item-list">
+        @for (location of locations(); track location.id) {
+          <div class="item-row">
+            <div>
+              <strong>{{ location.label }}</strong>
+              <span>{{ location.city || '-' }} / {{ location.district || '-' }}</span>
+              <small>{{ location.latitude }}, {{ location.longitude }} | {{ location.radiusKm }} km</small>
+            </div>
+            <div class="item-actions">
+              @if (location.primaryLocation) {
+                <span class="pill">Birincil</span>
+              }
+              <button type="button" (click)="deleteLocation(location.id)">Sil</button>
+            </div>
+          </div>
+        } @empty {
+          <p class="empty">Henuz konum yok.</p>
+        }
+      </div>
+    </article>
+
+    <article class="profile-panel">
+      <div class="panel-heading">
+        <div>
+          <h2>Aile uyeleri</h2>
+          <p>Guvendeyim akisi ve bildirimler icin ulasilacak kisiler.</p>
+        </div>
+        <span class="count">{{ familyMembers().length }}</span>
+      </div>
+
+      <form class="profile-form" [formGroup]="familyForm" (ngSubmit)="addFamilyMember()">
+        <label>
+          Ad soyad
+          <input type="text" formControlName="name" placeholder="Ayse Yilmaz">
+        </label>
+        <div class="form-row">
+          <label>
+            Yakinlik
+            <input type="text" formControlName="relationship" placeholder="Kardes">
+          </label>
+          <label>
+            Telefon
+            <input type="text" formControlName="phone" placeholder="+90...">
+          </label>
+        </div>
+        <label>
+          E-posta
+          <input type="email" formControlName="email" placeholder="ayse@example.com">
+        </label>
+        <label>
+          Pushover user key
+          <input type="text" formControlName="pushoverKey" placeholder="opsiyonel">
+        </label>
+        <label class="check-line">
+          <input type="checkbox" formControlName="notifyEnabled">
+          Bildirim gonder
+        </label>
+        <button class="action-btn" type="submit" [disabled]="saving() === 'family'">
+          {{ saving() === 'family' ? 'Kaydediliyor...' : 'Kisi ekle' }}
+        </button>
+      </form>
+
+      <div class="item-list">
+        @for (member of familyMembers(); track member.id) {
+          <div class="item-row">
+            <div>
+              <strong>{{ member.name }}</strong>
+              <span>{{ member.relationship || 'Yakin' }}</span>
+              <small>{{ member.email || member.phone || member.pushoverKey || 'Iletisim bilgisi yok' }}</small>
+            </div>
+            <div class="item-actions">
+              @if (member.notifyEnabled) {
+                <span class="pill">Aktif</span>
+              }
+              <button type="button" (click)="deleteFamilyMember(member.id)">Sil</button>
+            </div>
+          </div>
+        } @empty {
+          <p class="empty">Henuz aile uyesi yok.</p>
+        }
+      </div>
+    </article>
+  </section>
+
+  <section class="profile-panel profile-panel--wide">
+    <div class="panel-heading">
+      <div>
+        <h2>Gecmis deneyimler</h2>
+        <p>AI onerilerinde dikkate alinacak yasam ve hazirlik notlari.</p>
+      </div>
+      <span class="count">{{ experiences().length }}</span>
+    </div>
+
+    <form class="profile-form profile-form--experience" [formGroup]="experienceForm" (ngSubmit)="addExperience()">
+      <label>
+        Baslik
+        <input type="text" formControlName="title" placeholder="1999 depremi aile anlatimi">
+      </label>
+      <div class="form-row">
+        <label>
+          Tarih
+          <input type="date" formControlName="eventDate">
+        </label>
+        <label>
+          Konum
+          <input type="text" formControlName="location" placeholder="Kocaeli">
+        </label>
+        <label>
+          Buyukluk
+          <input type="number" step="0.1" formControlName="magnitude">
+        </label>
+      </div>
+      <label>
+        Etki
+        <input type="text" formControlName="emotionalImpact" placeholder="Yuksek, orta, dusuk">
+      </label>
+      <label>
+        Notlar
+        <textarea rows="4" formControlName="notes" placeholder="Bu deneyim hazirlik planini nasil etkilemeli?"></textarea>
+      </label>
+      <button class="action-btn" type="submit" [disabled]="saving() === 'experience'">
+        {{ saving() === 'experience' ? 'Kaydediliyor...' : 'Deneyim ekle' }}
+      </button>
+    </form>
+
+    <div class="item-list item-list--wide">
+      @for (experience of experiences(); track experience.id) {
+        <div class="item-row">
+          <div>
+            <strong>{{ experience.title }}</strong>
+            <span>{{ experience.location || '-' }} {{ experience.eventDate ? '| ' + experience.eventDate : '' }}</span>
+            <small>{{ experience.notes || 'Not eklenmemis' }}</small>
+          </div>
+          <div class="item-actions">
+            @if (experience.magnitude) {
+              <span class="pill">M{{ experience.magnitude }}</span>
+            }
+            <button type="button" (click)="deleteExperience(experience.id)">Sil</button>
+          </div>
+        </div>
+      } @empty {
+        <p class="empty">Henuz deneyim yok.</p>
+      }
+    </div>
+  </section>
+</main>

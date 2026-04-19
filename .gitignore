@@ -1,0 +1,6 @@
+.env
+*.env
+graph/.env
+infra/data/*.tif
+infra/data/*.zip
+.test-logs/

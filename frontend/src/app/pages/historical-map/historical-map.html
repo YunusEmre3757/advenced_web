@@ -1,0 +1,33 @@
+<section class="hist-shell">
+  <header class="hist-header">
+    <div>
+      <span class="eyebrow">50 yillik tarihsel analiz</span>
+      <h1>Tarihsel deprem + sismik bosluk haritasi</h1>
+      <p>USGS FDSN uzerinden M5+ kayitlari; uzun suredir buyuk sarsinti gormemis bolgeler turuncu kutucuklar olarak isaretlenir.</p>
+    </div>
+  </header>
+
+  <div class="hist-controls">
+    <button type="button" [class.active]="showEvents()" (click)="toggleEvents()">
+      Depremler ({{ eventCount() }})
+    </button>
+    <button type="button" [class.active]="showGaps()" (click)="toggleGaps()">
+      Sismik bosluklar ({{ gapCount() }})
+    </button>
+    <div class="legend">
+      <span class="dot dot--red"></span> M7+
+      <span class="dot dot--orange"></span> M6+
+      <span class="dot dot--yellow"></span> M5.5+
+      <span class="dot dot--green"></span> M5+
+    </div>
+  </div>
+
+  @if (loading()) {
+    <p class="notice">Tarihsel kayitlar yukleniyor (USGS sorgusu 10-20 saniye surebilir)...</p>
+  }
+  @if (error()) {
+    <p class="notice notice--err">{{ error() }}</p>
+  }
+
+  <div #histMap class="hist-map"></div>
+</section>

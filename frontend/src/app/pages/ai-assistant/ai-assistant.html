@@ -1,0 +1,54 @@
+<section class="ai-shell">
+  <header class="ai-header">
+    <span class="eyebrow">AI Asistan - LangGraph</span>
+    <h1>Deprem Rehberim AI Asistan</h1>
+    <p>Sorunu kategoriye gore yonlendiren graf-tabanli asistan. Veri sorusu Kandilli, rehber sorusu AFAD genel, risk sorusu yakin kayitlar uzerinden cevaplanir.</p>
+  </header>
+
+  <div class="ai-body">
+    <div class="ai-messages">
+      @for (m of messages(); track $index) {
+        <div class="bubble" [class.bubble--user]="m.role === 'user'" [class.bubble--assistant]="m.role === 'assistant'">
+          @if (m.role === 'assistant' && m.category) {
+            <span class="cat-pill" [class]="'cat-pill--' + m.category">{{ categoryLabel(m.category) }}</span>
+          }
+          <p>{{ m.text }}</p>
+          @if (m.sources?.length) {
+            <small class="bubble-source">Kaynak: {{ m.sources!.join(', ') }}</small>
+          }
+        </div>
+      }
+      @if (loading()) {
+        <div class="bubble bubble--assistant bubble--loading">
+          <p>Dusunuyor...</p>
+        </div>
+      }
+      @if (error()) {
+        <div class="bubble bubble--error">
+          <p>{{ error() }}</p>
+        </div>
+      }
+    </div>
+
+    <div class="ai-suggestions">
+      @for (s of suggestions; track s) {
+        <button type="button" class="chip" (click)="askSuggestion(s)" [disabled]="loading()">{{ s }}</button>
+      }
+      <button type="button" class="chip chip--loc" (click)="captureLocation()" [disabled]="loading()">
+        @if (userLat() !== null) { Konum alindi } @else { Konumu paylas }
+      </button>
+    </div>
+
+    <form class="ai-input" (submit)="$event.preventDefault(); send()">
+      <input
+        type="text"
+        [ngModel]="input()"
+        (ngModelChange)="input.set($event)"
+        name="question"
+        placeholder="Soru yaz..."
+        [disabled]="loading()"
+        autocomplete="off" />
+      <button type="submit" [disabled]="loading() || !input().trim()">Gonder</button>
+    </form>
+  </div>
+</section>

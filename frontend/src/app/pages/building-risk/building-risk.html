@@ -1,0 +1,213 @@
+<section class="risk-shell">
+  <header class="risk-header">
+    <span class="eyebrow">LangGraph destekli</span>
+    <h1>Bina risk on degerlendirmesi</h1>
+    <p>Bu ekran bina ozellikleri ile konum, zemin ve deprem baglamini birlikte yorumlayarak AI destekli bir on risk skoru uretir. Uzman incelemesi yerine gecmez.</p>
+  </header>
+
+  <form class="risk-form" [formGroup]="form" (ngSubmit)="submitAssessment()">
+    <section class="location-panel">
+      <div class="location-panel__head">
+        <div>
+          <span class="eyebrow">Konum ve zemin</span>
+          <h2>Adresle konumu bul</h2>
+          <p>Adres girildiginde sistem konumu bulur, haritada isaretler ve zemin sinifini otomatik doldurur.</p>
+        </div>
+      </div>
+
+      <div class="address-search">
+        <label class="address-field">
+          Adres veya bina notu
+          <input type="text" formControlName="addressText" placeholder="Ornek: Ataturk Mah. 1205. Sok. No: 8, Erzincan" />
+        </label>
+        <div class="location-actions">
+          <button type="button" class="primary" (click)="searchAddress()" [disabled]="geocodeLoading()">
+            {{ geocodeLoading() ? 'Adres araniyor...' : 'Adresten bul' }}
+          </button>
+          <button type="button" class="ghost" (click)="useMyLocation()">Mevcut konumumu kullan</button>
+        </div>
+      </div>
+
+      <div #riskMap class="risk-map"></div>
+
+      <div class="location-meta">
+        <span class="location-chip">{{ locationLabel() }}</span>
+        @if (soilLoading()) {
+          <span class="location-chip">Zemin katmani okunuyor...</span>
+        }
+      </div>
+
+      @if (geocodeError()) {
+        <p class="error-text">{{ geocodeError() }}</p>
+      }
+      @if (soilHint()) {
+        <p class="helper-text">{{ soilHint() }}</p>
+      }
+      @if (soilError()) {
+        <p class="error-text">{{ soilError() }}</p>
+      }
+      @if (locationError()) {
+        <p class="error-text">{{ locationError() }}</p>
+      }
+    </section>
+
+    <div class="grid">
+      <label>
+        Yapim yili
+        <input type="number" formControlName="constructionYear" min="1900" max="2025" />
+      </label>
+      <label>
+        Kat sayisi
+        <input type="number" formControlName="floorCount" min="1" max="50" />
+      </label>
+      <label>
+        Tasiyici sistem
+        <select formControlName="structuralSystem">
+          @for (o of structuralSystemOptions; track o.value) {
+            <option [value]="o.value">{{ o.label }}</option>
+          }
+        </select>
+      </label>
+      <label>
+        Zemin sinifi
+        <select formControlName="soilType">
+          @for (o of soilOptions; track o.value) {
+            <option [value]="o.value">{{ o.label }}</option>
+          }
+        </select>
+      </label>
+    </div>
+
+    <fieldset class="checks">
+      <legend>Gozle gorunur durum</legend>
+      <label><input type="checkbox" formControlName="columnCracks" /> Kolonlarda / kirislerde catlak</label>
+      <label><input type="checkbox" formControlName="pastDamage" /> Gecmiste deprem hasari</label>
+      <label><input type="checkbox" formControlName="softStorey" /> Zemin kat acik / ticari (yumusak kat)</label>
+      <label><input type="checkbox" formControlName="heavyTopFloor" /> Ust katlara sonradan eklenti</label>
+      <label><input type="checkbox" formControlName="irregularShape" /> Duzensiz / asimetrik plan</label>
+      <label><input type="checkbox" formControlName="retrofitDone" /> Guclendirme yapilmis</label>
+    </fieldset>
+
+    <button type="submit" class="primary" [disabled]="scoreLoading()">
+      {{ scoreLoading() ? 'Risk raporu uretiliyor...' : 'AI skoru hesapla' }}
+    </button>
+    @if (scoreError()) {
+      <p class="error-text">{{ scoreError() }}</p>
+    }
+  </form>
+
+  @if (result(); as r) {
+    <article class="result-panel" [style.border-color]="r.color">
+      <header>
+        <div class="result-heading">
+          <span class="level-pill" [style.background]="r.color">{{ r.label }}</span>
+          <span class="confidence-pill">Guven: {{ r.confidence }}</span>
+        </div>
+        <strong>{{ r.totalScore }}/100</strong>
+      </header>
+
+      <div class="bar">
+        <div class="bar-fill" [style.width]="scorePercent() + '%'" [style.background]="r.color"></div>
+      </div>
+
+      <section class="summary-box">
+        <span class="eyebrow">AI risk ozeti</span>
+        <p>{{ r.summary }}</p>
+      </section>
+
+      <section class="component-grid">
+        @for (card of componentCards(); track card.key) {
+          <div class="component-card">
+            <span>{{ card.label }}</span>
+            <strong>{{ card.value }}/{{ card.max }}</strong>
+          </div>
+        }
+      </section>
+
+      <div class="two-col">
+        <section class="driver-box">
+          <span class="eyebrow">Bina kaynakli etkenler</span>
+          <ul>
+            @for (driver of r.buildingDrivers; track driver) {
+              <li>{{ driver }}</li>
+            }
+          </ul>
+        </section>
+
+        <section class="driver-box">
+          <span class="eyebrow">Konum ve fay etkenleri</span>
+          <ul>
+            @for (driver of r.locationDrivers; track driver) {
+              <li>{{ driver }}</li>
+            }
+          </ul>
+        </section>
+      </div>
+
+      <div class="two-col">
+        <section class="driver-box">
+          <span class="eyebrow">Oncelikli adimlar</span>
+          <ul>
+            @for (action of r.recommendedActions; track action) {
+              <li>{{ action }}</li>
+            }
+          </ul>
+        </section>
+      </div>
+
+      <section class="context-box">
+        <span class="eyebrow">Fay & konum baglami (LangGraph context)</span>
+        <div class="context-chips">
+          <span class="location-chip">
+            <strong>Fay:</strong> {{ r.context['nearestFaultName'] ?? 'Belirsiz' }}
+          </span>
+          <span class="location-chip">
+            <strong>Mesafe:</strong> {{ r.context['nearestFaultDistanceKm'] ?? '-' }} km
+          </span>
+          <span class="location-chip">
+            <strong>Segment M5+:</strong> {{ r.context['segmentM5Count'] ?? 0 }}
+          </span>
+          <span class="location-chip">
+            <strong>Segment M6+:</strong> {{ r.context['segmentM6Count'] ?? 0 }}
+          </span>
+          <span class="location-chip">
+            <strong>Son M5+:</strong> {{ r.context['segmentLastM5EventYear'] ?? '-' }}
+          </span>
+          <span class="location-chip">
+            <strong>M5+ sonrası:</strong> {{ r.context['segmentYearsSinceM5Event'] ?? '-' }} yil
+          </span>
+          <span class="location-chip">
+            <strong>Son M6+:</strong> {{ r.context['segmentLastM6EventYear'] ?? '-' }}
+          </span>
+          <span class="location-chip">
+            <strong>M6+ sonrası:</strong> {{ r.context['segmentYearsSinceM6Event'] ?? '-' }} yil
+          </span>
+          <span class="location-chip">
+            <strong>Tarihsel:</strong> {{ r.context['historicalNearbyCount'] ?? 0 }} olay
+          </span>
+          <span class="location-chip">
+            <strong>Son 7 gün:</strong> {{ r.context['recentNearbyCount'] ?? 0 }} olay
+          </span>
+        </div>
+        <p class="context-note">{{ r.context['segmentContextNote'] ?? 'Fay koridoru icin yorum uretilemedi.' }}</p>
+        <p class="context-disclaimer">Bu alan deprem tahmini degil, tarihsel ve mekansal tehlike baglamidir. LangGraph scoring ve evaluator pattern ile uretilmistir.</p>
+      </section>
+
+      @if (r.cautions.length > 0) {
+        <section class="caution-box">
+          <span class="eyebrow">Belirsizlikler</span>
+          <ul>
+            @for (caution of r.cautions; track caution) {
+              <li>{{ caution }}</li>
+            }
+          </ul>
+        </section>
+      }
+
+      <section class="sources-box">
+        <span class="eyebrow">Kaynaklar</span>
+        <p>{{ r.sources.join(' | ') }}</p>
+      </section>
+    </article>
+  }
+</section>

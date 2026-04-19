@@ -16,8 +16,17 @@
         <a class="nav-item" routerLink="/dashboard" routerLinkActive="nav-item--active"
             [routerLinkActiveOptions]="{exact:true}">Ana Sayfa</a>
         <a class="nav-item" routerLink="/map" routerLinkActive="nav-item--active">Deprem Haritası</a>
-        <a class="nav-item" routerLink="/risk-query" routerLinkActive="nav-item--active">Risk Analizi</a>
+        <a class="nav-item" routerLink="/safety-guide" routerLinkActive="nav-item--active">Rehber</a>
+        <a class="nav-item" routerLink="/building-risk" routerLinkActive="nav-item--active">Bina Risk</a>
+        <a class="nav-item" routerLink="/historical-map" routerLinkActive="nav-item--active">Tarihsel</a>
+        <a class="nav-item" routerLink="/heatmap" routerLinkActive="nav-item--active">Yogunluk</a>
+        @if (isAuthenticated()) {
+            <a class="nav-item" routerLink="/profile" routerLinkActive="nav-item--active">Profil</a>
+        }
         <a class="nav-item" routerLink="/ai-assistant" routerLinkActive="nav-item--active">AI Asistan</a>
+        @if (isAuthenticated()) {
+            <a class="nav-item nav-item--safety" routerLink="/safety" routerLinkActive="nav-item--active">Guvendeyim</a>
+        }
     </div>
 
     <div class="nav-end">
@@ -32,12 +41,17 @@
 
         <div class="nav-separator"></div>
 
-        <div class="nav-user">
-            <div class="nav-user__meta">
-                <span class="nav-user__name">Ahmet Yılmaz</span>
-                <span class="nav-user__role">Premium Üye</span>
+        @if (isAuthenticated()) {
+            <div class="nav-user">
+                <div class="nav-user__meta">
+                    <span class="nav-user__name">{{ user()?.displayName || user()?.email }}</span>
+                    <span class="nav-user__role">Hesap</span>
+                </div>
+                <button class="nav-auth-btn" type="button" (click)="logout()">Çıkış</button>
             </div>
-            <img class="nav-user__avatar" src="https://i.pravatar.cc/150?img=11" alt="Profil" />
-        </div>
+        } @else {
+            <a class="nav-auth-btn" routerLink="/login">Giriş</a>
+            <a class="nav-auth-btn nav-auth-btn--primary" routerLink="/register">Kayıt Ol</a>
+        }
     </div>
 </nav>

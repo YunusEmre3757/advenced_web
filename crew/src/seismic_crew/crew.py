@@ -38,14 +38,16 @@ class SeismicCrew:
 
     @agent
     def data_collector(self) -> Agent:
+        # Short factual summary — fast 8b model is enough
         return Agent(
             config=self.agents_config["data_collector"],
-            llm=GROQ_LLM,
+            llm=GROQ_LLM_FAST,
             verbose=True,
         )
 
     @agent
     def fault_analyst(self) -> Agent:
+        # Geological interpretation — use the 70b model for quality
         return Agent(
             config=self.agents_config["fault_analyst"],
             llm=GROQ_LLM,
@@ -54,6 +56,7 @@ class SeismicCrew:
 
     @agent
     def risk_assessor(self) -> Agent:
+        # Risk reasoning + formula arithmetic — 70b for quality
         return Agent(
             config=self.agents_config["risk_assessor"],
             llm=GROQ_LLM,
@@ -62,9 +65,10 @@ class SeismicCrew:
 
     @agent
     def report_writer(self) -> Agent:
+        # Synthesis/rewrite of existing text — fast 8b model is enough
         return Agent(
             config=self.agents_config["report_writer"],
-            llm=GROQ_LLM,
+            llm=GROQ_LLM_FAST,
             verbose=True,
         )
 

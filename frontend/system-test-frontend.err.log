@@ -1,0 +1,339 @@
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'streamRecent' does not exist on type 'EarthquakeApi'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/dashboard/dashboard.ts:325:44:
+[37m      325 │     this.closeLiveFeed = this.earthquakeApi.[32mstreamRecent[37m({
+          ╵                                             [32m~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS7006: Parameter 'data' implicitly has an 'any' type.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/dashboard/dashboard.ts:327:13:
+[37m      327 │       next: ([32mdata[37m, snapshot) => {
+          ╵              [32m~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS7006: Parameter 'snapshot' implicitly has an 'any' type.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/dashboard/dashboard.ts:327:19:
+[37m      327 │       next: (data, [32msnapshot[37m) => {
+          ╵                    [32m~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module '../../core/realtime-api' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/dashboard/dashboard.ts:12:28:
+[37m      12 │ import { RealtimeApi } from [32m'../../core/realtime-api'[37m;
+         ╵                             [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS7006: Parameter 'data' implicitly has an 'any' type.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/dashboard/dashboard.ts:332:12:
+[37m      332 │       next: [32mdata[37m => {
+          ╵             [32m~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "../../core/realtime-api"[0m
+
+    src/app/pages/dashboard/dashboard.ts:13:20:
+[37m      13 │ import * as i2 from [32m"../../core/realtime-api"[37m;
+         ╵                     [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2307: Cannot find module '../../core/realtime-api' or its corresponding type declarations.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/dashboard/dashboard.ts:12:28:
+[37m      12 │ import { RealtimeApi } from [32m'../../core/realtime-api'[37m;
+         ╵                             [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS7006: Parameter 'data' implicitly has an 'any' type.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/dashboard/dashboard.ts:332:12:
+[37m      332 │       next: [32mdata[37m => {
+          ╵             [32m~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mCould not resolve "../../core/realtime-api"[0m
+
+    src/app/pages/dashboard/dashboard.ts:13:20:
+[37m      13 │ import * as i2 from [32m"../../core/realtime-api"[37m;
+         ╵                     [32m~~~~~~~~~~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'sendTestNotification' does not exist on type 'Profile'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.html:51:19:
+[37m      51 │           (click)="[32msendTestNotification[37m()"
+         ╵                    [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component Profile.
+
+    src/app/pages/profile/profile.ts:17:15:
+[37m      17 │   templateUrl: [32m'./profile.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'testResult' does not exist on type 'Profile'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.html:56:11:
+[37m      56 │       @if ([32mtestResult[37m(); as result) {
+         ╵            [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component Profile.
+
+    src/app/pages/profile/profile.ts:17:15:
+[37m      17 │   templateUrl: [32m'./profile.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'testResult' does not exist on type 'Profile'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.html:56:11:
+[37m      56 │       @if ([32mtestResult[37m(); as result) {
+         ╵            [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component Profile.
+
+    src/app/pages/profile/profile.ts:17:15:
+[37m      17 │   templateUrl: [32m'./profile.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'sendTestNotification' does not exist on type 'Profile'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.html:51:19:
+[37m      51 │           (click)="[32msendTestNotification[37m()"
+         ╵                    [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component Profile.
+
+    src/app/pages/profile/profile.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'testResult' does not exist on type 'Profile'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.html:56:11:
+[37m      56 │       @if ([32mtestResult[37m(); as result) {
+         ╵            [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component Profile.
+
+    src/app/pages/profile/profile.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'testResult' does not exist on type 'Profile'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.html:56:11:
+[37m      56 │       @if ([32mtestResult[37m(); as result) {
+         ╵            [32m~~~~~~~~~~[0m
+
+  Error occurs in the template of component Profile.
+
+    src/app/pages/profile/profile.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'sendTestNotification' does not exist on type 'Profile'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.html:51:19:
+[37m      51 │           (click)="[32msendTestNotification[37m()"
+         ╵                    [32m~~~~~~~~~~~~~~~~~~~~[0m
+
+  Error occurs in the template of component Profile.
+
+    src/app/pages/profile/profile.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'status' does not exist in type 'NotificationTestResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.ts:177:10:
+[37m      177 │           [32mstatus[37m: 'ERROR',
+          ╵           [32m~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2345: Argument of type '{ pushoverUserKey: string | null; pushoverEnabled: boolean; minMagnitude: number; notifyFamilyMembers: boolean; }' is not assignable to parameter of type 'NotificationPreferencePayload'.
+  Property 'emailEnabled' is missing in type '{ pushoverUserKey: string | null; pushoverEnabled: boolean; minMagnitude: number; notifyFamilyMembers: boolean; }' but required in type 'NotificationPreferencePayload'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.ts:193:46:
+[37m      193 │     this.profile.updateNotificationPreference([32m{[37m
+          ╵                                               [32m^[0m
+
+  'emailEnabled' is declared here.
+
+    src/app/core/profile-api.ts:79:2:
+[37m      79 │   [32memailEnabled[37m: boolean;
+         ╵   [32m~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'status' does not exist on type 'NotificationTestResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.html:58:21:
+[37m      58 │           [{{ result.[32mstatus[37m }}] {{ result.message }}
+         ╵                      [32m~~~~~~[0m
+
+  Error occurs in the template of component Profile.
+
+    src/app/pages/profile/profile.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'message' does not exist on type 'NotificationTestResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.html:58:42:
+[37m      58 │           [{{ result.status }}] {{ result.[32mmessage[37m }}
+         ╵                                           [32m~~~~~~~[0m
+
+  Error occurs in the template of component Profile.
+
+    src/app/pages/profile/profile.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'status' does not exist in type 'NotificationTestResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.ts:179:10:
+[37m      179 │           [32mstatus[37m: 'ERROR',
+          ╵           [32m~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'status' does not exist on type 'NotificationTestResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.html:58:21:
+[37m      58 │           [{{ result.[32mstatus[37m }}] {{ result.message }}
+         ╵                      [32m~~~~~~[0m
+
+  Error occurs in the template of component Profile.
+
+    src/app/pages/profile/profile.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'message' does not exist on type 'NotificationTestResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.html:58:42:
+[37m      58 │           [{{ result.status }}] {{ result.[32mmessage[37m }}
+         ╵                                           [32m~~~~~~~[0m
+
+  Error occurs in the template of component Profile.
+
+    src/app/pages/profile/profile.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'status' does not exist in type 'NotificationTestResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.ts:181:10:
+[37m      181 │           [32mstatus[37m: 'ERROR',
+          ╵           [32m~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'status' does not exist on type 'NotificationTestResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.html:58:21:
+[37m      58 │           [{{ result.[32mstatus[37m }}] {{ result.message }}
+         ╵                      [32m~~~~~~[0m
+
+  Error occurs in the template of component Profile.
+
+    src/app/pages/profile/profile.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'message' does not exist on type 'NotificationTestResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.html:58:42:
+[37m      58 │           [{{ result.status }}] {{ result.[32mmessage[37m }}
+         ╵                                           [32m~~~~~~~[0m
+
+  Error occurs in the template of component Profile.
+
+    src/app/pages/profile/profile.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2353: Object literal may only specify known properties, and 'status' does not exist in type 'NotificationTestResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.ts:181:10:
+[37m      181 │           [32mstatus[37m: 'ERROR',
+          ╵           [32m~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'status' does not exist on type 'NotificationTestResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.html:58:21:
+[37m      58 │           [{{ result.[32mstatus[37m }}] {{ result.message }}
+         ╵                      [32m~~~~~~[0m
+
+  Error occurs in the template of component Profile.
+
+    src/app/pages/profile/profile.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'message' does not exist on type 'NotificationTestResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.html:58:42:
+[37m      58 │           [{{ result.status }}] {{ result.[32mmessage[37m }}
+         ╵                                           [32m~~~~~~~[0m
+
+  Error occurs in the template of component Profile.
+
+    src/app/pages/profile/profile.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'status' does not exist on type 'NotificationTestResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.html:66:21:
+[37m      66 │           [{{ result.[32mstatus[37m }}] {{ result.message }}
+         ╵                      [32m~~~~~~[0m
+
+  Error occurs in the template of component Profile.
+
+    src/app/pages/profile/profile.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~[0m
+
+
+[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'message' does not exist on type 'NotificationTestResult'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.html:66:42:
+[37m      66 │           [{{ result.status }}] {{ result.[32mmessage[37m }}
+         ╵                                           [32m~~~~~~~[0m
+
+  Error occurs in the template of component Profile.
+
+    src/app/pages/profile/profile.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~[0m
+
+[39m[22m
+[1m[31m[31mX [41;31m[[41;97mERROR[41;31m][0m [1mTS2339: Property 'canSendTest' does not exist on type 'Profile'.[0m [1m[35m[plugin angular-compiler][0m
+
+    src/app/pages/profile/profile.html:60:46:
+[37m      60 │           [disabled]="saving() === 'test' || ![32mcanSendTest[37m()">
+         ╵                                               [32m~~~~~~~~~~~[0m
+
+  Error occurs in the template of component Profile.
+
+    src/app/pages/profile/profile.ts:18:15:
+[37m      18 │   templateUrl: [32m'./profile.html'[37m,
+         ╵                [32m~~~~~~~~~~~~~~~~[0m
+
+[39m[22m

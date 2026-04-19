@@ -1,0 +1,118 @@
+:host {
+  display: block;
+  min-height: calc(100vh - 64px);
+  padding: 1rem 1.25rem 1.6rem;
+  color: #eef5ff;
+  font-family: var(--font-family);
+}
+
+.hist-shell {
+  width: min(1280px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.hist-header {
+  padding: 1rem 1.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, rgba(14, 23, 39, 0.98), rgba(21, 29, 45, 0.96));
+  border-radius: 10px;
+}
+
+.hist-header .eyebrow {
+  display: inline-block;
+  color: #9fb2ce;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+.hist-header h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.45rem;
+  color: #f8fbff;
+}
+
+.hist-header p {
+  margin: 0;
+  color: #bdd0ea;
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.hist-controls {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.74);
+  border-radius: 10px;
+}
+
+.hist-controls button {
+  padding: 0.42rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd7ea;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.hist-controls button.active {
+  background: #7dd3fc;
+  border-color: #7dd3fc;
+  color: #05110a;
+}
+
+.legend {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+  margin-left: auto;
+  font-size: 0.76rem;
+  color: #bdd0ea;
+}
+
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 0.25rem;
+  vertical-align: middle;
+}
+
+.dot--red { background: #ef4444; }
+.dot--orange { background: #f97316; }
+.dot--yellow { background: #eab308; }
+.dot--green { background: #22c55e; }
+
+.notice {
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.8);
+  color: #cbd7ea;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.notice--err {
+  color: #fecaca;
+  border-color: rgba(239, 68, 68, 0.28);
+  background: rgba(127, 29, 29, 0.2);
+}
+
+.hist-map {
+  min-height: 580px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}

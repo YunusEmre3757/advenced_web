@@ -1,0 +1,127 @@
+:host {
+  display: block;
+  min-height: calc(100vh - 64px);
+  padding: 1rem 1.25rem 1.6rem;
+  color: #eef5ff;
+  font-family: var(--font-family);
+}
+
+.heat-shell {
+  width: min(1280px, 100%);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.heat-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.8rem;
+  align-items: center;
+  padding: 1rem 1.2rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(135deg, rgba(14, 23, 39, 0.98), rgba(21, 29, 45, 0.96));
+  border-radius: 10px;
+}
+
+.heat-header .eyebrow {
+  display: inline-block;
+  color: #9fb2ce;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  margin-bottom: 0.3rem;
+}
+
+.heat-header h1 {
+  margin: 0 0 0.35rem;
+  font-size: 1.45rem;
+  color: #f8fbff;
+}
+
+.heat-header p {
+  margin: 0;
+  color: #bdd0ea;
+  font-size: 0.86rem;
+}
+
+.stat {
+  text-align: right;
+}
+
+.stat strong {
+  display: block;
+  font-size: 1.7rem;
+  color: #7dd3fc;
+  line-height: 1;
+}
+
+.stat span {
+  color: #9fb2ce;
+  font-size: 0.76rem;
+}
+
+.heat-controls {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.74);
+  border-radius: 10px;
+}
+
+.group {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.g-label {
+  color: #9fb2ce;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  font-weight: 800;
+  margin-right: 0.4rem;
+}
+
+.heat-controls button {
+  padding: 0.35rem 0.7rem;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: #cbd7ea;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.heat-controls button.active {
+  background: #7dd3fc;
+  border-color: #7dd3fc;
+  color: #05110a;
+}
+
+.notice {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(15, 23, 42, 0.8);
+  color: #cbd7ea;
+  font-size: 0.82rem;
+}
+
+.notice--err {
+  color: #fecaca;
+  border-color: rgba(239, 68, 68, 0.28);
+  background: rgba(127, 29, 29, 0.2);
+}
+
+.heat-map {
+  min-height: 580px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}

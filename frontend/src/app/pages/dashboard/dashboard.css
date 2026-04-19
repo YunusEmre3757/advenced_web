@@ -155,6 +155,14 @@
   font-size: 0.66rem;
   background: rgba(255, 255, 255, 0.05);
   color: #c9d8ef;
+  text-decoration: none;
+  transition: border-color 0.16s ease, background 0.16s ease;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.event-chip:hover {
+  background: rgba(125, 211, 252, 0.09);
+  border-color: rgba(125, 211, 252, 0.25);
 }
 
 .event-chip__mag {
@@ -246,6 +254,15 @@ td {
 .loc {
   color: #f8fbff;
   font-weight: 500;
+}
+
+.loc a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.loc a:hover {
+  color: #7dd3fc;
 }
 
 .muted {

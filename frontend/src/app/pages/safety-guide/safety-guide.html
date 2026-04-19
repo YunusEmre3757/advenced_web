@@ -1,0 +1,35 @@
+<section class="guide-shell">
+  <header class="guide-header">
+    <span class="eyebrow">Rehber</span>
+    <h1>Deprem guvenlik rehberi</h1>
+    <p>Hazirlik, sarsinti ani ve sonrasi icin kisa, net adimlar. Bu sayfayi her uc ayda bir ailece tekrar gec.</p>
+  </header>
+
+  <nav class="guide-tabs" aria-label="Rehber bolumleri">
+    @for (s of sections; track s.id) {
+      <button
+        type="button"
+        class="guide-tab"
+        [class.guide-tab--active]="isActive(s.id)"
+        (click)="setActive(s.id)">
+        {{ s.label }}
+      </button>
+    }
+  </nav>
+
+  <article class="guide-panel">
+    <header class="panel-head">
+      <h2>{{ activeSection().heading }}</h2>
+      <p>{{ activeSection().description }}</p>
+    </header>
+
+    <ol class="step-list">
+      @for (step of activeSection().steps; track step.title) {
+        <li class="step-item">
+          <h3>{{ step.title }}</h3>
+          <p>{{ step.body }}</p>
+        </li>
+      }
+    </ol>
+  </article>
+</section>

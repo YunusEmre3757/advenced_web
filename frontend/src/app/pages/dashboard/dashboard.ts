@@ -30,6 +30,7 @@ export class Dashboard implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('miniMap', { static: false }) miniMapEl!: ElementRef;
   private map!: L.Map;
   private markersLayer = L.layerGroup();
+  private closeLiveFeed: (() => void) | null = null;
 
   earthquakes = signal<Earthquake[]>([]);
   requestError = signal<string | null>(null);
@@ -50,6 +51,7 @@ export class Dashboard implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnInit(): void {
     this.fetchEarthquakes();
+    this.connectLiveFeed();
   }
 
   ngAfterViewInit(): void {
@@ -57,6 +59,7 @@ export class Dashboard implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnDestroy(): void {
+    this.closeLiveFeed?.();
     if (this.map) this.map.remove();
   }
 
@@ -306,11 +309,7 @@ export class Dashboard implements OnInit, OnDestroy, AfterViewInit {
   fetchEarthquakes(): void {
     this.earthquakeApi.getRecent(168, 1, 500).subscribe({
       next: (data) => {
-        this.earthquakes.set(data);
-        this.updateStats(data);
-        this.updateNearest(data);
-        this.updateMapMarkers(data);
-        this.lastUpdated.set(new Date());
+        this.applyEarthquakes(data);
         this.requestError.set(null);
       },
       error: () => {
@@ -320,6 +319,26 @@ export class Dashboard implements OnInit, OnDestroy, AfterViewInit {
         this.requestError.set('Veri su anda alinamiyor. Kaynak erisimi kontrol edin.');
       }
     });
+  }
+
+  private connectLiveFeed(): void {
+    this.closeLiveFeed = this.earthquakeApi.streamRecent({
+      open: () => this.requestError.set(null),
+      next: (data, snapshot) => {
+        void snapshot;
+        this.applyEarthquakes(data);
+        this.requestError.set(null);
+      },
+      error: () => {}
+    });
+  }
+
+  private applyEarthquakes(data: Earthquake[]): void {
+    this.earthquakes.set(data);
+    this.updateStats(data);
+    this.updateNearest(data);
+    this.updateMapMarkers(data);
+    this.lastUpdated.set(new Date());
   }
 
   private updateStats(data: Earthquake[]): void {

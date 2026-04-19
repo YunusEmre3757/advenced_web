@@ -23,10 +23,62 @@ export interface Earthquake {
   distanceKm: number;
 }
 
+export interface EarthquakeFeedSnapshot {
+  source: string;
+  emittedAt: string;
+  intervalSeconds: number;
+  earthquakes: EarthquakeApiItem[];
+}
+
+export interface HistoricalMatchApiItem {
+  id: string;
+  time: string;
+  place: string;
+  magnitude: number;
+  latitude: number;
+  longitude: number;
+  depthKm: number;
+  distanceKm: number;
+  magnitudeDelta: number;
+}
+
+export interface HistoricalMatch {
+  id: string;
+  date: Date;
+  place: string;
+  magnitude: number;
+  latitude: number;
+  longitude: number;
+  depthKm: number;
+  distanceKm: number;
+  magnitudeDelta: number;
+}
+
+export interface DyfiSummary {
+  responses: number | null;
+  maxCdi: number | null;
+  url: string | null;
+}
+
+export interface EarthquakeDetailApiItem {
+  event: EarthquakeApiItem;
+  aftershocks: EarthquakeApiItem[];
+  similarHistorical: HistoricalMatchApiItem[];
+  dyfi: DyfiSummary | null;
+}
+
+export interface EarthquakeDetail {
+  event: Earthquake;
+  aftershocks: Earthquake[];
+  similarHistorical: HistoricalMatch[];
+  dyfi: DyfiSummary | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class EarthquakeApi {
   private readonly http = inject(HttpClient);
   private readonly apiBase = 'http://localhost:8080/api/earthquakes';
+  private readonly feedBase = 'http://localhost:8080/api/feed/earthquakes';
   // Ankara city center is used as a simple reference point for distance KPIs.
   private readonly anchorLat = 39.9334;
   private readonly anchorLng = 32.8597;
@@ -39,7 +91,46 @@ export class EarthquakeApi {
     );
   }
 
-  private toEarthquake(row: EarthquakeApiItem): Earthquake {
+  getDetail(id: string, aftershockLimit = 16, similarLimit = 10): Observable<EarthquakeDetail> {
+    return this.http.get<EarthquakeDetailApiItem>(
+      `${this.apiBase}/${encodeURIComponent(id)}?aftershockLimit=${aftershockLimit}&similarLimit=${similarLimit}`
+    ).pipe(
+      map((row) => ({
+        event: this.toEarthquake(row.event),
+        aftershocks: this.toEarthquakes(row.aftershocks),
+        similarHistorical: row.similarHistorical.map((item) => ({
+          ...item,
+          date: new Date(item.time)
+        })),
+        dyfi: row.dyfi
+      }))
+    );
+  }
+
+  streamRecent(
+    handlers: {
+      next: (earthquakes: Earthquake[], snapshot: EarthquakeFeedSnapshot) => void;
+      error?: () => void;
+      open?: () => void;
+    },
+    hours = 168,
+    minMagnitude = 1,
+    limit = 500
+  ): () => void {
+    const url = `${this.feedBase}/stream?hours=${hours}&minMagnitude=${minMagnitude}&limit=${limit}`;
+    const source = new EventSource(url);
+
+    source.onopen = () => handlers.open?.();
+    source.onerror = () => handlers.error?.();
+    source.addEventListener('snapshot', (event) => {
+      const snapshot = JSON.parse((event as MessageEvent).data) as EarthquakeFeedSnapshot;
+      handlers.next(snapshot.earthquakes.map((row) => this.toEarthquake(row)), snapshot);
+    });
+
+    return () => source.close();
+  }
+
+  toEarthquake(row: EarthquakeApiItem): Earthquake {
     return {
       id: row.id,
       date: new Date(row.time),
@@ -50,6 +141,10 @@ export class EarthquakeApi {
       depth: row.depthKm,
       distanceKm: Math.round(this.haversineKm(this.anchorLat, this.anchorLng, row.latitude, row.longitude))
     };
+  }
+
+  toEarthquakes(rows: EarthquakeApiItem[]): Earthquake[] {
+    return rows.map((row) => this.toEarthquake(row));
   }
 
   private haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {

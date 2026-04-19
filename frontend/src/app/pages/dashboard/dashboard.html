@@ -36,10 +36,10 @@
       <div class="map-container" #miniMap></div>
       <div class="event-chips">
         @for (eq of strongestEvents(); track eq.id) {
-        <div class="event-chip">
+        <a class="event-chip" [routerLink]="['/earthquakes', eq.id]">
           <span class="event-chip__loc">{{ eq.location }}</span>
           <span class="event-chip__mag">M{{ normalizedMag(eq) | number:'1.1-1' }}</span>
-        </div>
+        </a>
         }
       </div>
     </article>
@@ -90,7 +90,7 @@
           @for (eq of earthquakes().slice(0, 32); track eq.id) {
           <tr>
             <td class="muted">{{ eq.date | date:'dd.MM HH:mm' }}</td>
-            <td class="loc">{{ eq.location }}</td>
+            <td class="loc"><a [routerLink]="['/earthquakes', eq.id]">{{ eq.location }}</a></td>
             <td>
               <span class="mag" [class.mag--high]="normalizedMag(eq) >= 5"
                 [class.mag--mid]="normalizedMag(eq) >= 3 && normalizedMag(eq) < 5"

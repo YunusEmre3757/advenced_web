@@ -9,6 +9,7 @@ import {
   signal
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import * as maplibregl from 'maplibre-gl';
 import { Earthquake, EarthquakeApi } from '../../core/earthquake-api';
 import { FaultLineApi, FaultLineGeoJson } from '../../core/fault-line-api';
@@ -114,7 +115,8 @@ export class Map implements OnInit, OnDestroy, AfterViewInit {
     private readonly faultLineApi: FaultLineApi,
     private readonly soilZoneApi: SoilZoneApi,
     private readonly aiApi: AiApi,
-    private readonly crewApi: CrewApi
+    private readonly crewApi: CrewApi,
+    private readonly router: Router
   ) {}
 
   ngOnInit(): void {
@@ -647,6 +649,7 @@ export class Map implements OnInit, OnDestroy, AfterViewInit {
         `<div class="eqp-title">${location}</div>` +
         `<div class="eqp-meta">M${mag} | ${depth} km | ${dateText}</div>` +
         `<div class="eqp-btn-row">` +
+        `<button class="eqp-detail-btn" type="button">Detay</button>` +
         `<button class="eqp-ai-btn" type="button">AI Sohbet</button>` +
         `<button class="eqp-crew-btn" type="button">Crew Derin Analiz</button>` +
         `</div>`
@@ -661,6 +664,10 @@ export class Map implements OnInit, OnDestroy, AfterViewInit {
     const aiBtn = popupEl?.querySelector('.eqp-ai-btn') as HTMLButtonElement | null;
     if (aiBtn) {
       aiBtn.onclick = () => this.openAiFromSelectedEvent(location);
+    }
+    const detailBtn = popupEl?.querySelector('.eqp-detail-btn') as HTMLButtonElement | null;
+    if (detailBtn && eventId) {
+      detailBtn.onclick = () => void this.router.navigate(['/earthquakes', eventId]);
     }
     const crewBtn = popupEl?.querySelector('.eqp-crew-btn') as HTMLButtonElement | null;
     if (crewBtn) {

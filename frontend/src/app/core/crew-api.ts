@@ -36,8 +36,8 @@ export interface CrewAnalyzeResult {
 @Injectable({ providedIn: 'root' })
 export class CrewApi {
   private readonly http = inject(HttpClient);
-  // FastAPI crew service - direct connection
-  private readonly baseUrl = 'http://localhost:8002';
+  // Spring Boot proxy -> FastAPI crew service
+  private readonly baseUrl = 'http://localhost:8080/api/crew';
 
   analyze(payload: CrewAnalyzeRequest): Observable<CrewAnalyzeResult> {
     return this.http.post<CrewAnalyzeResult>(`${this.baseUrl}/analyze`, payload);

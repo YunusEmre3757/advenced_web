@@ -1,0 +1,185 @@
+<div class="detail-shell">
+  <a class="back-link" routerLink="/dashboard">Dashboard'a don</a>
+
+  @if (loading()) {
+  <section class="state-panel">Deprem detayi yukleniyor...</section>
+  } @else if (error()) {
+  <section class="state-panel state-panel--error">{{ error() }}</section>
+  } @else if (detail(); as d) {
+  <header class="detail-hero">
+    <div>
+      <span class="eyebrow">Kandilli olay kaydi</span>
+      <h1>{{ d.event.location }}</h1>
+      <p>{{ d.event.date | date:'dd.MM.yyyy HH:mm:ss' }} - {{ relativeTime(d.event.date) }}</p>
+    </div>
+    <div class="hero-metric" [class]="'hero-metric--' + magClass(normalizedMag(d.event))">
+      <span>M</span>
+      <strong>{{ normalizedMag(d.event) | number:'1.1-1' }}</strong>
+    </div>
+  </header>
+
+  <section class="metric-strip">
+    <article>
+      <span>Derinlik</span>
+      <strong>{{ d.event.depth | number:'1.0-1' }} km</strong>
+    </article>
+    <article>
+      <span>Koordinat</span>
+      <strong>{{ d.event.lat | number:'1.3-3' }}, {{ d.event.lng | number:'1.3-3' }}</strong>
+    </article>
+    <article>
+      <span>Artci adaylari</span>
+      <strong>{{ d.aftershocks.length }}</strong>
+    </article>
+  </section>
+
+  <section class="map-stage">
+    <div class="map-copy">
+      <span class="panel-label">Sarsinti alani</span>
+      <h2>Tahmini etki halkalari</h2>
+      <p>Halkalar buyukluk ve derinlige gore yaklasik menzil verir; resmi hasar ya da siddet haritasi degildir.</p>
+    </div>
+    <div #detailMap class="detail-map"></div>
+  </section>
+
+  <section class="content-grid">
+    <article class="panel action-panel">
+      <div class="panel-head">
+        <span class="panel-label">Operasyon notu</span>
+      </div>
+      <ul class="signal-list">
+        @for (item of quickRead(d); track item) {
+        <li>{{ item }}</li>
+        }
+      </ul>
+      <div class="action-row">
+        <a class="primary-link" routerLink="/safety">Guvendeyim akisi</a>
+        <a class="secondary-link" routerLink="/map">Haritada incele</a>
+      </div>
+    </article>
+
+    <article class="panel ai-panel">
+      <div class="panel-head">
+        <span class="panel-label">LangGraph olay ozeti</span>
+        @if (aiSummary(); as ai) {
+        <span class="risk-pill" [class]="'risk-pill--' + ai.riskLevel">{{ ai.riskLevel }}</span>
+        }
+      </div>
+      <p class="explain-text">Graph, olay verisini artci adaylari ve tarihsel benzerlerle birlestirip kosullu AI yorumu uretir.</p>
+      @if (aiSummary(); as ai) {
+      <p class="ai-summary">{{ ai.summary }}</p>
+      @if (ai.recommendations.length > 0) {
+      <ul class="ai-recommendations">
+        @for (rec of ai.recommendations; track rec) {
+        <li>{{ rec }}</li>
+        }
+      </ul>
+      }
+      } @else {
+      <div class="ai-empty">
+        <span>Bu panel LangGraph /graph/quake-detail akisini kullanir.</span>
+        <button type="button" class="secondary-link ai-button" (click)="runAiSummary()" [disabled]="aiLoading()">
+          {{ aiLoading() ? 'Analiz ediliyor...' : 'AI olay ozeti uret' }}
+        </button>
+      </div>
+      }
+      @if (aiError()) {
+      <p class="error-text">{{ aiError() }}</p>
+      }
+      @if (aiSummary()) {
+      <button type="button" class="secondary-link ai-button" (click)="runAiSummary()" [disabled]="aiLoading()">
+        {{ aiLoading() ? 'Yenileniyor...' : 'AI ozetini yenile' }}
+      </button>
+      }
+    </article>
+  </section>
+
+  <section class="content-grid">
+    <article class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Artci beklenti modeli (Omori)</span>
+        <span class="panel-meta">Teorik + olculen adaylar</span>
+      </div>
+      <p class="explain-text">Omori modeli artci sayisinin zamanla azalmasini anlatir; bu panel tahmin degil, izleme icin egitimsel modeldir.</p>
+      <app-omori-chart
+        [mainshockTime]="d.event.date"
+        [mainshockMagnitude]="d.event.mag"
+        [aftershocks]="d.aftershocks">
+      </app-omori-chart>
+    </article>
+
+    <article class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Tahmini etkilenen nufus</span>
+        <span class="panel-meta">Dinamik maruziyet</span>
+      </div>
+      @if (populationImpact(); as pop) {
+        <div class="pop-summary">
+          <strong>{{ pop.estimatedAffectedPopulation | number }}</strong>
+          <span>kisi &middot; {{ pop.radiusKm }} km yaricap &middot; guven {{ pop.confidence }}</span>
+        </div>
+        <p class="explain-text">{{ pop.method }}</p>
+        <p class="source-text">{{ pop.source }}</p>
+        <div class="exposure-stats">
+          <span>{{ pop.cellsUsed | number }} grid hucre</span>
+          <span>{{ pop.exposedPopulationWithinRadius | number }} kisi yaricap icinde</span>
+        </div>
+      } @else if (populationLoading()) {
+        <p class="empty-text">WorldPop nufus grid'i okunuyor...</p>
+      } @else if (populationError()) {
+        <p class="error-text">{{ populationError() }}</p>
+      } @else {
+        <p class="empty-text">Nufus verisi bekleniyor.</p>
+      }
+    </article>
+  </section>
+
+  <section class="content-grid content-grid--wide">
+    <article class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Artci adaylari</span>
+        <span class="panel-meta">72 saat / 75 km aday filtresi</span>
+      </div>
+      @if (d.aftershocks.length > 0) {
+      <div class="event-list">
+        @for (eq of d.aftershocks; track eq.id) {
+        <a class="event-row" [routerLink]="['/earthquakes', eq.id]">
+          <span class="event-row__time">{{ eq.date | date:'dd.MM HH:mm' }}</span>
+          <span class="event-row__loc">{{ eq.location }}</span>
+          <span class="event-row__mag" [class]="'event-row__mag--' + magClass(normalizedMag(eq))">M{{ normalizedMag(eq) | number:'1.1-1' }}</span>
+          <span class="event-row__depth">{{ eq.depth | number:'1.0-0' }} km</span>
+        </a>
+        }
+      </div>
+      } @else {
+      <p class="empty-text">Bu pencere icinde artci aday kaydi yok.</p>
+      }
+    </article>
+
+    <article class="panel">
+      <div class="panel-head">
+        <span class="panel-title">Benzer tarihsel olaylar</span>
+        <span class="panel-meta">USGS FDSN</span>
+      </div>
+      @if (d.similarHistorical.length > 0) {
+      <div class="history-list">
+        @for (item of d.similarHistorical; track item.id) {
+        <div class="history-row">
+          <div>
+            <strong>{{ item.place || 'Konum yok' }}</strong>
+            <span>{{ item.date | date:'dd.MM.yyyy HH:mm' }}</span>
+          </div>
+          <div class="history-row__metrics">
+            <span>M{{ item.magnitude | number:'1.1-1' }}</span>
+            <span>{{ item.distanceKm | number:'1.0-0' }} km</span>
+          </div>
+        </div>
+        }
+      </div>
+      } @else {
+      <p class="empty-text">Bu bolge ve buyukluk araliginda benzer tarihsel olay bulunamadi.</p>
+      }
+    </article>
+  </section>
+  }
+</div>

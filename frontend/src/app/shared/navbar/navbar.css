@@ -161,6 +161,33 @@
     border: 2px solid rgba(139, 92, 246, 0.5);
 }
 
+.nav-auth-btn {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.75rem;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-secondary);
+    font-size: 0.84rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.nav-auth-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-primary);
+}
+
+.nav-auth-btn--primary {
+    background: var(--accent-blue);
+    border-color: transparent;
+    color: #ffffff;
+}
+
 /* ---- Responsive Navbar ---- */
 @media (max-width: 900px) {
     .nav {
