@@ -1,213 +1,428 @@
-<section class="risk-shell">
-  <header class="risk-header">
-    <span class="eyebrow">LangGraph destekli</span>
-    <h1>Bina risk on degerlendirmesi</h1>
-    <p>Bu ekran bina ozellikleri ile konum, zemin ve deprem baglamini birlikte yorumlayarak AI destekli bir on risk skoru uretir. Uzman incelemesi yerine gecmez.</p>
+<section class="wizard-shell">
+
+  <!-- ───── HEADER ───── -->
+  <header class="wizard-header">
+    <div class="wizard-header__icon">
+      <i class="fa-solid fa-shield-halved"></i>
+    </div>
+    <div>
+      <span class="eyebrow">LangGraph destekli risk analizi</span>
+      <h1>Bina Deprem Risk Değerlendirmesi</h1>
+    </div>
   </header>
 
-  <form class="risk-form" [formGroup]="form" (ngSubmit)="submitAssessment()">
-    <section class="location-panel">
-      <div class="location-panel__head">
+  <!-- ───── PROGRESS BAR ───── -->
+  @if (!result()) {
+    <div class="progress-track">
+      <div class="progress-steps">
+        @for (s of steps; track s.id) {
+          <div class="step" [class.active]="currentStep() === s.id" [class.done]="currentStep() > s.id" (click)="currentStep() > s.id && goToStep(s.id)">
+            <div class="step__circle">
+              @if (currentStep() > s.id) {
+                <i class="fa-solid fa-check"></i>
+              } @else {
+                <i [class]="s.icon"></i>
+              }
+            </div>
+            <span class="step__label">{{ s.label }}</span>
+          </div>
+          @if (s.id < steps.length) {
+            <div class="step__line" [class.done]="currentStep() > s.id"></div>
+          }
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ───── STEP 1: KONUM ───── -->
+  @if (currentStep() === 1 && !result()) {
+    <div class="wizard-card" @fadeSlide>
+      <div class="wizard-card__head">
+        <i class="fa-solid fa-location-dot wizard-card__icon"></i>
         <div>
-          <span class="eyebrow">Konum ve zemin</span>
-          <h2>Adresle konumu bul</h2>
-          <p>Adres girildiginde sistem konumu bulur, haritada isaretler ve zemin sinifini otomatik doldurur.</p>
+          <h2>Konum Seç</h2>
+          <p>Adres girerek veya mevcut konumunuzu kullanarak binanın yerini belirleyin.</p>
         </div>
       </div>
 
-      <div class="address-search">
-        <label class="address-field">
-          Adres veya bina notu
-          <input type="text" formControlName="addressText" placeholder="Ornek: Ataturk Mah. 1205. Sok. No: 8, Erzincan" />
-        </label>
-        <div class="location-actions">
-          <button type="button" class="primary" (click)="searchAddress()" [disabled]="geocodeLoading()">
-            {{ geocodeLoading() ? 'Adres araniyor...' : 'Adresten bul' }}
-          </button>
-          <button type="button" class="ghost" (click)="useMyLocation()">Mevcut konumumu kullan</button>
+      <div class="address-row">
+        <div class="input-wrap">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" [formControl]="addressCtrl" placeholder="Örnek: Atatürk Mah. 1205. Sok. No:8, Erzincan" />
         </div>
+        <button class="btn-primary" (click)="searchAddress()" [disabled]="geocodeLoading()">
+          @if (geocodeLoading()) {
+            <i class="fa-solid fa-spinner fa-spin"></i> Aranıyor...
+          } @else {
+            <i class="fa-solid fa-search"></i> Bul
+          }
+        </button>
+        <button class="btn-ghost" (click)="useMyLocation()">
+          <i class="fa-solid fa-crosshairs"></i> Konumum
+        </button>
       </div>
 
-      <div #riskMap class="risk-map"></div>
+      @if (geocodeError()) { <p class="msg-error"><i class="fa-solid fa-triangle-exclamation"></i> {{ geocodeError() }}</p> }
+      @if (locationError()) { <p class="msg-error"><i class="fa-solid fa-triangle-exclamation"></i> {{ locationError() }}</p> }
 
-      <div class="location-meta">
-        <span class="location-chip">{{ locationLabel() }}</span>
+      <div #riskMap class="wizard-map"></div>
+
+      <div class="location-badges">
+        <span class="badge">
+          <i class="fa-solid fa-map-pin"></i> {{ locationLabel() }}
+        </span>
         @if (soilLoading()) {
-          <span class="location-chip">Zemin katmani okunuyor...</span>
+          <span class="badge badge--loading">
+            <i class="fa-solid fa-spinner fa-spin"></i> Zemin okunuyor...
+          </span>
+        }
+        @if (soilHint()) {
+          <span class="badge badge--info">
+            <i class="fa-solid fa-layer-group"></i> {{ soilHint() }}
+          </span>
         }
       </div>
 
-      @if (geocodeError()) {
-        <p class="error-text">{{ geocodeError() }}</p>
-      }
-      @if (soilHint()) {
-        <p class="helper-text">{{ soilHint() }}</p>
-      }
-      @if (soilError()) {
-        <p class="error-text">{{ soilError() }}</p>
-      }
-      @if (locationError()) {
-        <p class="error-text">{{ locationError() }}</p>
-      }
-    </section>
+      @if (soilError()) { <p class="msg-error"><i class="fa-solid fa-triangle-exclamation"></i> {{ soilError() }}</p> }
 
-    <div class="grid">
-      <label>
-        Yapim yili
-        <input type="number" formControlName="constructionYear" min="1900" max="2025" />
-      </label>
-      <label>
-        Kat sayisi
-        <input type="number" formControlName="floorCount" min="1" max="50" />
-      </label>
-      <label>
-        Tasiyici sistem
-        <select formControlName="structuralSystem">
-          @for (o of structuralSystemOptions; track o.value) {
-            <option [value]="o.value">{{ o.label }}</option>
-          }
-        </select>
-      </label>
-      <label>
-        Zemin sinifi
-        <select formControlName="soilType">
-          @for (o of soilOptions; track o.value) {
-            <option [value]="o.value">{{ o.label }}</option>
-          }
-        </select>
-      </label>
+      <div class="wizard-nav">
+        <span></span>
+        <button class="btn-primary btn-lg" (click)="goToStep(2)">
+          Devam <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
     </div>
+  }
 
-    <fieldset class="checks">
-      <legend>Gozle gorunur durum</legend>
-      <label><input type="checkbox" formControlName="columnCracks" /> Kolonlarda / kirislerde catlak</label>
-      <label><input type="checkbox" formControlName="pastDamage" /> Gecmiste deprem hasari</label>
-      <label><input type="checkbox" formControlName="softStorey" /> Zemin kat acik / ticari (yumusak kat)</label>
-      <label><input type="checkbox" formControlName="heavyTopFloor" /> Ust katlara sonradan eklenti</label>
-      <label><input type="checkbox" formControlName="irregularShape" /> Duzensiz / asimetrik plan</label>
-      <label><input type="checkbox" formControlName="retrofitDone" /> Guclendirme yapilmis</label>
-    </fieldset>
-
-    <button type="submit" class="primary" [disabled]="scoreLoading()">
-      {{ scoreLoading() ? 'Risk raporu uretiliyor...' : 'AI skoru hesapla' }}
-    </button>
-    @if (scoreError()) {
-      <p class="error-text">{{ scoreError() }}</p>
-    }
-  </form>
-
-  @if (result(); as r) {
-    <article class="result-panel" [style.border-color]="r.color">
-      <header>
-        <div class="result-heading">
-          <span class="level-pill" [style.background]="r.color">{{ r.label }}</span>
-          <span class="confidence-pill">Guven: {{ r.confidence }}</span>
+  <!-- ───── STEP 2: BİNA BİLGİLERİ ───── -->
+  @if (currentStep() === 2 && !result()) {
+    <div class="wizard-card" @fadeSlide [formGroup]="form">
+      <div class="wizard-card__head">
+        <i class="fa-solid fa-building wizard-card__icon"></i>
+        <div>
+          <h2>Bina Bilgileri</h2>
+          <p>Yapıya ait temel bilgileri girin. Zemin sınıfı konumdan otomatik doldurulmuş olabilir.</p>
         </div>
-        <strong>{{ r.totalScore }}/100</strong>
-      </header>
-
-      <div class="bar">
-        <div class="bar-fill" [style.width]="scorePercent() + '%'" [style.background]="r.color"></div>
       </div>
 
-      <section class="summary-box">
-        <span class="eyebrow">AI risk ozeti</span>
-        <p>{{ r.summary }}</p>
-      </section>
+      <div class="info-grid">
 
-      <section class="component-grid">
+        <div class="info-field">
+          <label><i class="fa-solid fa-calendar-days"></i> Yapım Yılı</label>
+          <input type="number" formControlName="constructionYear" min="1900" max="2025" />
+          @if ((form.get('constructionYear')?.value ?? 2000) < 2000) {
+            <span class="field-hint field-hint--warn"><i class="fa-solid fa-circle-exclamation"></i> 2000 öncesi yapı — yüksek risk faktörü</span>
+          }
+        </div>
+
+        <div class="info-field">
+          <label><i class="fa-solid fa-layer-group"></i> Kat Sayısı</label>
+          <input type="number" formControlName="floorCount" min="1" max="50" />
+        </div>
+
+        <div class="info-field">
+          <label><i class="fa-solid fa-hammer"></i> Taşıyıcı Sistem</label>
+          <div class="select-wrap">
+            <select formControlName="structuralSystem">
+              @for (o of structuralSystemOptions; track o.value) {
+                <option [value]="o.value">{{ o.label }}</option>
+              }
+            </select>
+            <i class="fa-solid fa-chevron-down"></i>
+          </div>
+        </div>
+
+        <div class="info-field">
+          <label><i class="fa-solid fa-mountain"></i> Zemin Sınıfı</label>
+          <div class="select-wrap">
+            <select formControlName="soilType">
+              @for (o of soilOptions; track o.value) {
+                <option [value]="o.value">{{ o.label }}</option>
+              }
+            </select>
+            <i class="fa-solid fa-chevron-down"></i>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="wizard-nav">
+        <button class="btn-ghost" (click)="goToStep(1)">
+          <i class="fa-solid fa-arrow-left"></i> Geri
+        </button>
+        <button class="btn-primary btn-lg" (click)="goToStep(3)">
+          Devam <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ───── STEP 3: GÖZLE GÖRÜNÜR DURUM ───── -->
+  @if (currentStep() === 3 && !result()) {
+    <div class="wizard-card" @fadeSlide [formGroup]="form">
+      <div class="wizard-card__head">
+        <i class="fa-solid fa-eye wizard-card__icon"></i>
+        <div>
+          <h2>Gözle Görünür Durum</h2>
+          <p>Binada gözlemlediğiniz durumları işaretleyin. Her seçim risk skorunu etkiler.</p>
+        </div>
+      </div>
+
+      <div class="check-grid">
+
+        <label class="check-card" [class.checked]="form.get('columnCracks')?.value" (click)="toggleCheck('columnCracks')">
+          <div class="check-card__icon">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+          <div class="check-card__text">
+            <strong>Kolon / Kiriş Çatlağı</strong>
+            <span>Taşıyıcı elemanlarda hasar görüldü</span>
+          </div>
+          <div class="check-card__box">
+            @if (form.get('columnCracks')?.value) {
+              <i class="fa-solid fa-square-check"></i>
+            } @else {
+              <i class="fa-regular fa-square"></i>
+            }
+          </div>
+        </label>
+
+        <label class="check-card" [class.checked]="form.get('pastDamage')?.value" (click)="toggleCheck('pastDamage')">
+          <div class="check-card__icon">
+            <i class="fa-solid fa-house-crack"></i>
+          </div>
+          <div class="check-card__text">
+            <strong>Geçmişte Deprem Hasarı</strong>
+            <span>Daha önce hasar görüldü</span>
+          </div>
+          <div class="check-card__box">
+            @if (form.get('pastDamage')?.value) {
+              <i class="fa-solid fa-square-check"></i>
+            } @else {
+              <i class="fa-regular fa-square"></i>
+            }
+          </div>
+        </label>
+
+        <label class="check-card" [class.checked]="form.get('softStorey')?.value" (click)="toggleCheck('softStorey')">
+          <div class="check-card__icon">
+            <i class="fa-solid fa-store"></i>
+          </div>
+          <div class="check-card__text">
+            <strong>Yumuşak Kat</strong>
+            <span>Zemin kat açık veya ticari</span>
+          </div>
+          <div class="check-card__box">
+            @if (form.get('softStorey')?.value) {
+              <i class="fa-solid fa-square-check"></i>
+            } @else {
+              <i class="fa-regular fa-square"></i>
+            }
+          </div>
+        </label>
+
+        <label class="check-card" [class.checked]="form.get('heavyTopFloor')?.value" (click)="toggleCheck('heavyTopFloor')">
+          <div class="check-card__icon">
+            <i class="fa-solid fa-arrow-up-from-bracket"></i>
+          </div>
+          <div class="check-card__text">
+            <strong>Üst Kat Eklentisi</strong>
+            <span>Sonradan yapılan ilave katlar</span>
+          </div>
+          <div class="check-card__box">
+            @if (form.get('heavyTopFloor')?.value) {
+              <i class="fa-solid fa-square-check"></i>
+            } @else {
+              <i class="fa-regular fa-square"></i>
+            }
+          </div>
+        </label>
+
+        <label class="check-card" [class.checked]="form.get('irregularShape')?.value" (click)="toggleCheck('irregularShape')">
+          <div class="check-card__icon">
+            <i class="fa-solid fa-shapes"></i>
+          </div>
+          <div class="check-card__text">
+            <strong>Düzensiz Plan</strong>
+            <span>Asimetrik veya L/T şekilli bina</span>
+          </div>
+          <div class="check-card__box">
+            @if (form.get('irregularShape')?.value) {
+              <i class="fa-solid fa-square-check"></i>
+            } @else {
+              <i class="fa-regular fa-square"></i>
+            }
+          </div>
+        </label>
+
+        <label class="check-card check-card--positive" [class.checked]="form.get('retrofitDone')?.value" (click)="toggleCheck('retrofitDone')">
+          <div class="check-card__icon">
+            <i class="fa-solid fa-helmet-safety"></i>
+          </div>
+          <div class="check-card__text">
+            <strong>Güçlendirme Yapıldı</strong>
+            <span>Deprem güçlendirmesi mevcut</span>
+          </div>
+          <div class="check-card__box">
+            @if (form.get('retrofitDone')?.value) {
+              <i class="fa-solid fa-square-check"></i>
+            } @else {
+              <i class="fa-regular fa-square"></i>
+            }
+          </div>
+        </label>
+
+      </div>
+
+      @if (scoreError()) {
+        <p class="msg-error"><i class="fa-solid fa-triangle-exclamation"></i> {{ scoreError() }}</p>
+      }
+
+      <div class="wizard-nav">
+        <button class="btn-ghost" (click)="goToStep(2)">
+          <i class="fa-solid fa-arrow-left"></i> Geri
+        </button>
+        <button class="btn-submit btn-lg" (click)="submitAssessment()" [disabled]="scoreLoading()">
+          @if (scoreLoading()) {
+            <i class="fa-solid fa-spinner fa-spin"></i> Analiz yapılıyor...
+          } @else {
+            <i class="fa-solid fa-bolt"></i> AI Skoru Hesapla
+          }
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- ───── RESULT ───── -->
+  @if (result(); as r) {
+    <div class="result-shell" @fadeSlide>
+
+      <!-- Score Hero -->
+      <div class="score-hero" [attr.data-level]="r.level">
+        <div class="score-hero__left">
+          <div class="score-circle" [attr.data-level]="r.level">
+            <svg viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="52" class="track"/>
+              <circle cx="60" cy="60" r="52" class="fill" [style.stroke-dashoffset]="scoreDashOffset()"/>
+            </svg>
+            <div class="score-circle__inner">
+              <span class="score-circle__num">{{ displayScore() }}</span>
+              <span class="score-circle__total">/100</span>
+            </div>
+          </div>
+        </div>
+        <div class="score-hero__right">
+          <div class="level-badge" [attr.data-level]="r.level">
+            <i [class]="levelIcon(r.level)"></i>
+            {{ r.label }}
+          </div>
+          <p class="confidence-text">
+            <i class="fa-solid fa-gauge-high"></i> Güven: <strong>{{ r.confidence }}</strong>
+          </p>
+          <p class="result-summary">{{ r.summary }}</p>
+          <button class="btn-ghost btn-sm" (click)="resetWizard()">
+            <i class="fa-solid fa-rotate-left"></i> Yeni Değerlendirme
+          </button>
+        </div>
+      </div>
+
+      <!-- Component Scores -->
+      <div class="section-title"><i class="fa-solid fa-chart-bar"></i> Puan Bileşenleri</div>
+      <div class="component-grid">
         @for (card of componentCards(); track card.key) {
-          <div class="component-card">
-            <span>{{ card.label }}</span>
-            <strong>{{ card.value }}/{{ card.max }}</strong>
+          <div class="comp-card">
+            <i [class]="card.icon"></i>
+            <span class="comp-card__label">{{ card.label }}</span>
+            <div class="comp-bar">
+              <div class="comp-bar__fill" [style.width.%]="(card.value / card.max) * 100" [attr.data-level]="r.level"></div>
+            </div>
+            <span class="comp-card__score">{{ card.value }}<em>/{{ card.max }}</em></span>
           </div>
         }
-      </section>
-
-      <div class="two-col">
-        <section class="driver-box">
-          <span class="eyebrow">Bina kaynakli etkenler</span>
-          <ul>
-            @for (driver of r.buildingDrivers; track driver) {
-              <li>{{ driver }}</li>
-            }
-          </ul>
-        </section>
-
-        <section class="driver-box">
-          <span class="eyebrow">Konum ve fay etkenleri</span>
-          <ul>
-            @for (driver of r.locationDrivers; track driver) {
-              <li>{{ driver }}</li>
-            }
-          </ul>
-        </section>
       </div>
 
+      <!-- Drivers -->
       <div class="two-col">
-        <section class="driver-box">
-          <span class="eyebrow">Oncelikli adimlar</span>
+        <div class="info-box">
+          <div class="info-box__head">
+            <i class="fa-solid fa-building-circle-exclamation"></i> Yapısal Etkenler
+          </div>
           <ul>
-            @for (action of r.recommendedActions; track action) {
-              <li>{{ action }}</li>
+            @for (d of r.buildingDrivers; track d) {
+              <li><i class="fa-solid fa-circle-dot"></i> {{ d }}</li>
             }
           </ul>
-        </section>
-      </div>
-
-      <section class="context-box">
-        <span class="eyebrow">Fay & konum baglami (LangGraph context)</span>
-        <div class="context-chips">
-          <span class="location-chip">
-            <strong>Fay:</strong> {{ r.context['nearestFaultName'] ?? 'Belirsiz' }}
-          </span>
-          <span class="location-chip">
-            <strong>Mesafe:</strong> {{ r.context['nearestFaultDistanceKm'] ?? '-' }} km
-          </span>
-          <span class="location-chip">
-            <strong>Segment M5+:</strong> {{ r.context['segmentM5Count'] ?? 0 }}
-          </span>
-          <span class="location-chip">
-            <strong>Segment M6+:</strong> {{ r.context['segmentM6Count'] ?? 0 }}
-          </span>
-          <span class="location-chip">
-            <strong>Son M5+:</strong> {{ r.context['segmentLastM5EventYear'] ?? '-' }}
-          </span>
-          <span class="location-chip">
-            <strong>M5+ sonrası:</strong> {{ r.context['segmentYearsSinceM5Event'] ?? '-' }} yil
-          </span>
-          <span class="location-chip">
-            <strong>Son M6+:</strong> {{ r.context['segmentLastM6EventYear'] ?? '-' }}
-          </span>
-          <span class="location-chip">
-            <strong>M6+ sonrası:</strong> {{ r.context['segmentYearsSinceM6Event'] ?? '-' }} yil
-          </span>
-          <span class="location-chip">
-            <strong>Tarihsel:</strong> {{ r.context['historicalNearbyCount'] ?? 0 }} olay
-          </span>
-          <span class="location-chip">
-            <strong>Son 7 gün:</strong> {{ r.context['recentNearbyCount'] ?? 0 }} olay
-          </span>
         </div>
-        <p class="context-note">{{ r.context['segmentContextNote'] ?? 'Fay koridoru icin yorum uretilemedi.' }}</p>
-        <p class="context-disclaimer">Bu alan deprem tahmini degil, tarihsel ve mekansal tehlike baglamidir. LangGraph scoring ve evaluator pattern ile uretilmistir.</p>
-      </section>
-
-      @if (r.cautions.length > 0) {
-        <section class="caution-box">
-          <span class="eyebrow">Belirsizlikler</span>
+        <div class="info-box">
+          <div class="info-box__head">
+            <i class="fa-solid fa-earth-europe"></i> Konum & Fay Etkenleri
+          </div>
           <ul>
-            @for (caution of r.cautions; track caution) {
-              <li>{{ caution }}</li>
+            @for (d of r.locationDrivers; track d) {
+              <li><i class="fa-solid fa-circle-dot"></i> {{ d }}</li>
             }
           </ul>
-        </section>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="info-box info-box--actions">
+        <div class="info-box__head">
+          <i class="fa-solid fa-list-check"></i> Öncelikli Adımlar
+        </div>
+        <ol>
+          @for (a of r.recommendedActions; track a; let i = $index) {
+            <li>
+              <span class="action-num">{{ i + 1 }}</span>
+              {{ a }}
+            </li>
+          }
+        </ol>
+      </div>
+
+      <!-- Fault Context -->
+      <div class="info-box">
+        <div class="info-box__head">
+          <i class="fa-solid fa-wave-square"></i> Fay & Sismik Bağlam
+        </div>
+        <div class="fault-chips">
+          <span class="fault-chip"><i class="fa-solid fa-bolt"></i><strong>Fay:</strong> {{ r.context['nearestFaultName'] ?? 'Belirsiz' }}</span>
+          <span class="fault-chip"><i class="fa-solid fa-ruler"></i><strong>Mesafe:</strong> {{ r.context['nearestFaultDistanceKm'] ?? '-' }} km</span>
+          <span class="fault-chip"><i class="fa-solid fa-chart-line"></i><strong>M5+:</strong> {{ r.context['segmentM5Count'] ?? 0 }}</span>
+          <span class="fault-chip"><i class="fa-solid fa-chart-line"></i><strong>M6+:</strong> {{ r.context['segmentM6Count'] ?? 0 }}</span>
+          <span class="fault-chip"><i class="fa-solid fa-clock-rotate-left"></i><strong>Son M5+:</strong> {{ r.context['segmentLastM5EventYear'] ?? '-' }}</span>
+          <span class="fault-chip"><i class="fa-solid fa-hourglass"></i><strong>M5+ sonrası:</strong> {{ r.context['segmentYearsSinceM5Event'] ?? '-' }} yıl</span>
+          <span class="fault-chip"><i class="fa-solid fa-clock-rotate-left"></i><strong>Son M6+:</strong> {{ r.context['segmentLastM6EventYear'] ?? '-' }}</span>
+          <span class="fault-chip"><i class="fa-solid fa-database"></i><strong>Tarihsel:</strong> {{ r.context['historicalNearbyCount'] ?? 0 }} olay</span>
+          <span class="fault-chip"><i class="fa-solid fa-calendar-week"></i><strong>Son 7 gün:</strong> {{ r.context['recentNearbyCount'] ?? 0 }} olay</span>
+        </div>
+        <p class="context-note">{{ r.context['segmentContextNote'] ?? '' }}</p>
+        <p class="context-disclaimer"><i class="fa-solid fa-circle-info"></i> Bu alan deprem tahmini değil, tarihsel ve mekansal tehlike bağlamıdır.</p>
+      </div>
+
+      <!-- Cautions -->
+      @if (r.cautions.length > 0) {
+        <div class="info-box info-box--caution">
+          <div class="info-box__head">
+            <i class="fa-solid fa-triangle-exclamation"></i> Belirsizlikler & Uyarılar
+          </div>
+          <ul>
+            @for (c of r.cautions; track c) {
+              <li><i class="fa-solid fa-circle-dot"></i> {{ c }}</li>
+            }
+          </ul>
+        </div>
       }
 
-      <section class="sources-box">
-        <span class="eyebrow">Kaynaklar</span>
-        <p>{{ r.sources.join(' | ') }}</p>
-      </section>
-    </article>
+      <!-- Sources -->
+      <div class="sources-row">
+        <i class="fa-solid fa-database"></i>
+        @for (s of r.sources; track s; let last = $last) {
+          <span>{{ s }}</span>@if (!last){<span class="sep">·</span>}
+        }
+      </div>
+
+    </div>
   }
+
 </section>

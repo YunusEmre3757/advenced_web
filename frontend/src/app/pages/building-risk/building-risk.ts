@@ -1,6 +1,16 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, ViewChild, computed, inject, signal } from '@angular/core';
+import {
+  AfterViewInit,
+  Component,
+  ElementRef,
+  OnDestroy,
+  ViewChild,
+  computed,
+  inject,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { animate, style, transition, trigger } from '@angular/animations';
 import * as L from 'leaflet';
 import { AiApi, GraphBuildingRiskResponse } from '../../core/ai-api';
 import { SoilZoneApi, SoilZoneGeoJson } from '../../core/soil-zone-api';
@@ -30,12 +40,25 @@ interface SelectedLocation {
   label?: string;
 }
 
+const CIRCLE_CIRCUMFERENCE = 2 * Math.PI * 52; // r=52
+
 @Component({
   selector: 'app-building-risk',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './building-risk.html',
   styleUrl: './building-risk.css',
+  animations: [
+    trigger('fadeSlide', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(16px)' }),
+        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' })),
+      ]),
+      transition(':leave', [
+        animate('200ms ease-in', style({ opacity: 0, transform: 'translateY(-8px)' })),
+      ]),
+    ]),
+  ],
 })
 export class BuildingRisk implements AfterViewInit, OnDestroy {
   @ViewChild('riskMap', { static: false }) riskMapEl!: ElementRef<HTMLDivElement>;
@@ -47,6 +70,17 @@ export class BuildingRisk implements AfterViewInit, OnDestroy {
 
   private map?: L.Map;
   private readonly selectionLayer = L.layerGroup();
+  private scoreAnimationFrame?: number;
+
+  readonly currentStep = signal<number>(1);
+
+  readonly steps = [
+    { id: 1, label: 'Konum', icon: 'fa-solid fa-location-dot' },
+    { id: 2, label: 'Bina', icon: 'fa-solid fa-building' },
+    { id: 3, label: 'Durum', icon: 'fa-solid fa-eye' },
+  ];
+
+  readonly addressCtrl = new FormControl('', { nonNullable: true });
 
   readonly form = this.fb.nonNullable.group({
     addressText: [''],
@@ -72,38 +106,47 @@ export class BuildingRisk implements AfterViewInit, OnDestroy {
   readonly soilLoading = signal(false);
   readonly soilHint = signal<string | null>(null);
   readonly soilError = signal<string | null>(null);
+  readonly displayScore = signal<number>(0);
 
   readonly soilOptions = [
-    { value: 'ZA', label: 'ZA - Saglam kaya' },
-    { value: 'ZB', label: 'ZB - Orta saglam kaya' },
-    { value: 'ZC', label: 'ZC - Cok sikilasmis zemin' },
-    { value: 'ZD', label: 'ZD - Orta siki zemin' },
-    { value: 'ZE', label: 'ZE - Gevsek / yumusak zemin' },
-    { value: 'ZF', label: 'ZF - Ozel zemin (riskli)' },
+    { value: 'ZA', label: 'ZA - Sağlam kaya' },
+    { value: 'ZB', label: 'ZB - Orta sağlam kaya' },
+    { value: 'ZC', label: 'ZC - Çok sıkılaşmış zemin' },
+    { value: 'ZD', label: 'ZD - Orta sıkı zemin' },
+    { value: 'ZE', label: 'ZE - Gevşek / yumuşak zemin' },
+    { value: 'ZF', label: 'ZF - Özel zemin (riskli)' },
   ];
 
   readonly structuralSystemOptions = [
     { value: 'reinforced_concrete', label: 'Betonarme' },
-    { value: 'masonry', label: 'Yigma / tasiyici duvar' },
-    { value: 'steel', label: 'Celik' },
+    { value: 'masonry', label: 'Yığma / taşıyıcı duvar' },
+    { value: 'steel', label: 'Çelik' },
     { value: 'unknown', label: 'Bilinmiyor' },
   ];
 
   readonly scorePercent = computed(() => this.result()?.totalScore ?? 0);
+
   readonly locationLabel = computed(() => {
     const loc = this.selectedLocation();
-    if (!loc) return 'Konum secilmedi';
+    if (!loc) return 'Konum seçilmedi';
     if (loc.label) return loc.label;
-    return `${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)} (${loc.source === 'device' ? 'cihaz konumu' : 'adres aramasi'})`;
+    return `${loc.lat.toFixed(5)}, ${loc.lng.toFixed(5)} (${loc.source === 'device' ? 'cihaz konumu' : 'adres araması'})`;
   });
+
+  readonly scoreDashOffset = computed(() => {
+    const score = this.displayScore();
+    const fraction = Math.min(score / 100, 1);
+    return CIRCLE_CIRCUMFERENCE * (1 - fraction);
+  });
+
   readonly componentCards = computed(() => {
-    const componentScores = this.result()?.componentScores ?? {};
+    const s = this.result()?.componentScores ?? {};
     return [
-      { key: 'structural', label: 'Yapisal', max: 35, value: componentScores['structural'] ?? 0 },
-      { key: 'soil', label: 'Zemin', max: 15, value: componentScores['soil'] ?? 0 },
-      { key: 'faultProximity', label: 'Fay yakinligi', max: 15, value: componentScores['faultProximity'] ?? 0 },
-      { key: 'historicalSeismicity', label: 'Tarihsel sismisite', max: 15, value: componentScores['historicalSeismicity'] ?? 0 },
-      { key: 'observedDamage', label: 'Gozlenen hasar', max: 20, value: componentScores['observedDamage'] ?? 0 },
+      { key: 'structural', label: 'Yapısal', max: 35, value: s['structural'] ?? 0, icon: 'fa-solid fa-building' },
+      { key: 'soil', label: 'Zemin', max: 15, value: s['soil'] ?? 0, icon: 'fa-solid fa-mountain' },
+      { key: 'faultProximity', label: 'Fay Yakınlığı', max: 15, value: s['faultProximity'] ?? 0, icon: 'fa-solid fa-wave-square' },
+      { key: 'historicalSeismicity', label: 'Tarihsel Sismik', max: 15, value: s['historicalSeismicity'] ?? 0, icon: 'fa-solid fa-chart-line' },
+      { key: 'observedDamage', label: 'Gözlenen Hasar', max: 20, value: s['observedDamage'] ?? 0, icon: 'fa-solid fa-house-crack' },
     ];
   });
 
@@ -113,6 +156,38 @@ export class BuildingRisk implements AfterViewInit, OnDestroy {
 
   ngOnDestroy(): void {
     if (this.map) this.map.remove();
+    if (this.scoreAnimationFrame) cancelAnimationFrame(this.scoreAnimationFrame);
+  }
+
+  goToStep(n: number): void {
+    this.currentStep.set(n);
+    if (n === 1) {
+      window.setTimeout(() => this.map?.invalidateSize(), 150);
+    }
+  }
+
+  toggleCheck(field: string): void {
+    const ctrl = this.form.get(field);
+    if (ctrl) ctrl.setValue(!ctrl.value);
+  }
+
+  levelIcon(level: string): string {
+    switch (level) {
+      case 'dusuk': return 'fa-solid fa-circle-check';
+      case 'orta': return 'fa-solid fa-circle-exclamation';
+      case 'yuksek': return 'fa-solid fa-triangle-exclamation';
+      case 'kritik': return 'fa-solid fa-skull-crossbones';
+      default: return 'fa-solid fa-circle-question';
+    }
+  }
+
+  resetWizard(): void {
+    this.result.set(null);
+    this.scoreError.set(null);
+    this.displayScore.set(0);
+    if (this.scoreAnimationFrame) cancelAnimationFrame(this.scoreAnimationFrame);
+    this.currentStep.set(1);
+    window.setTimeout(() => this.map?.invalidateSize(), 150);
   }
 
   submitAssessment(): void {
@@ -124,7 +199,7 @@ export class BuildingRisk implements AfterViewInit, OnDestroy {
     const location = this.selectedLocation();
     this.api.graphBuildingRisk({
       building: {
-        addressText: values.addressText,
+        addressText: this.addressCtrl.value || values.addressText,
         constructionYear: values.constructionYear,
         floorCount: values.floorCount,
         structuralSystem: values.structuralSystem,
@@ -136,28 +211,27 @@ export class BuildingRisk implements AfterViewInit, OnDestroy {
         irregularShape: values.irregularShape,
         retrofitDone: values.retrofitDone,
       },
-      location: location ? {
-        latitude: location.lat,
-        longitude: location.lng,
-        label: location.label,
-        source: location.source,
-      } : null,
+      location: location
+        ? { latitude: location.lat, longitude: location.lng, label: location.label, source: location.source }
+        : null,
     }).subscribe({
       next: (response) => {
         this.scoreLoading.set(false);
-        this.result.set(this.toRiskResult(response));
+        const r = this.toRiskResult(response);
+        this.result.set(r);
+        this.animateScore(r.totalScore);
       },
       error: () => {
         this.scoreLoading.set(false);
-        this.scoreError.set('AI risk skoru uretilemedi. Backend ve LangGraph servislerini kontrol et.');
+        this.scoreError.set('AI risk skoru üretilemedi. Backend ve LangGraph servislerini kontrol et.');
       },
     });
   }
 
   searchAddress(): void {
-    const query = this.form.controls.addressText.value.trim();
+    const query = this.addressCtrl.value.trim();
     if (query.length < 5) {
-      this.geocodeError.set('Lutfen en az mahalle/sokak duzeyinde bir adres gir.');
+      this.geocodeError.set('Lütfen en az mahalle/sokak düzeyinde bir adres gir.');
       return;
     }
 
@@ -172,7 +246,7 @@ export class BuildingRisk implements AfterViewInit, OnDestroy {
       },
       error: () => {
         this.geocodeLoading.set(false);
-        this.geocodeError.set('Adres bulunamadi. Daha net bir adres, ilce veya mahalle eklemeyi dene.');
+        this.geocodeError.set('Adres bulunamadı. Daha net bir adres, ilçe veya mahalle eklemeyi dene.');
       },
     });
   }
@@ -181,7 +255,7 @@ export class BuildingRisk implements AfterViewInit, OnDestroy {
     this.locationError.set(null);
     this.geocodeError.set(null);
     if (!('geolocation' in navigator)) {
-      this.locationError.set('Bu tarayicida konum servisi desteklenmiyor.');
+      this.locationError.set('Bu tarayıcıda konum servisi desteklenmiyor.');
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -189,10 +263,25 @@ export class BuildingRisk implements AfterViewInit, OnDestroy {
         this.setLocation(position.coords.latitude, position.coords.longitude, 'device');
       },
       () => {
-        this.locationError.set('Cihaz konumu alinamadi. Adres aramayi deneyebilirsin.');
+        this.locationError.set('Cihaz konumu alınamadı. Adres aramayı deneyebilirsin.');
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
+  }
+
+  private animateScore(target: number): void {
+    const duration = 1200;
+    const start = performance.now();
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      this.displayScore.set(Math.round(eased * target));
+      if (progress < 1) {
+        this.scoreAnimationFrame = requestAnimationFrame(tick);
+      }
+    };
+    this.scoreAnimationFrame = requestAnimationFrame(tick);
   }
 
   private initMap(): void {
@@ -258,16 +347,16 @@ export class BuildingRisk implements AfterViewInit, OnDestroy {
         const siteClass = this.findSiteClassAtPoint(lat, lng, geojson);
         if (siteClass) {
           this.form.patchValue({ soilType: siteClass });
-          this.soilHint.set(`Bulunan konum icin zemin sinifi ${siteClass} olarak otomatik dolduruldu.`);
+          this.soilHint.set(`Bu konum için zemin sınıfı ${siteClass} otomatik seçildi.`);
         } else {
-          this.soilHint.set('Bu konum icin zemin sinifi bulunamadi; istersen manuel secim yapabilirsin.');
+          this.soilHint.set('Bu konum için zemin sınıfı bulunamadı; manuel seçim yapabilirsin.');
         }
         this.soilLoading.set(false);
       },
       error: () => {
         this.soilLoading.set(false);
-        this.soilError.set('Zemin katmani alinamadi. Soil API calisiyor mu?');
-      }
+        this.soilError.set('Zemin katmanı alınamadı. Soil API çalışıyor mu?');
+      },
     });
   }
 
@@ -280,40 +369,28 @@ export class BuildingRisk implements AfterViewInit, OnDestroy {
     return null;
   }
 
-  private featureContainsPoint(
-    feature: SoilZoneGeoJson['features'][number],
-    lat: number,
-    lng: number
-  ): boolean {
+  private featureContainsPoint(feature: SoilZoneGeoJson['features'][number], lat: number, lng: number): boolean {
     const geometry = feature.geometry;
-    if (geometry.type === 'Polygon') {
-      return this.polygonContainsPoint(geometry.coordinates as number[][][], lat, lng);
-    }
-    if (geometry.type === 'MultiPolygon') {
-      return (geometry.coordinates as number[][][][]).some((polygon) => this.polygonContainsPoint(polygon, lat, lng));
-    }
+    if (geometry.type === 'Polygon') return this.polygonContainsPoint(geometry.coordinates as number[][][], lat, lng);
+    if (geometry.type === 'MultiPolygon') return (geometry.coordinates as number[][][][]).some((p) => this.polygonContainsPoint(p, lat, lng));
     return false;
   }
 
   private polygonContainsPoint(rings: number[][][], lat: number, lng: number): boolean {
     if (rings.length === 0) return false;
     if (!this.ringContainsPoint(rings[0], lat, lng)) return false;
-    for (let i = 1; i < rings.length; i += 1) {
-      if (this.ringContainsPoint(rings[i], lat, lng)) return false;
-    }
+    for (let i = 1; i < rings.length; i++) if (this.ringContainsPoint(rings[i], lat, lng)) return false;
     return true;
   }
 
   private ringContainsPoint(ring: number[][], lat: number, lng: number): boolean {
     let inside = false;
     for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-      const xi = ring[i][0];
-      const yi = ring[i][1];
-      const xj = ring[j][0];
-      const yj = ring[j][1];
-      const intersects = ((yi > lat) !== (yj > lat))
-        && (lng < ((xj - xi) * (lat - yi)) / ((yj - yi) || Number.EPSILON) + xi);
-      if (intersects) inside = !inside;
+      const [xi, yi] = ring[i];
+      const [xj, yj] = ring[j];
+      if (((yi > lat) !== (yj > lat)) && lng < ((xj - xi) * (lat - yi)) / ((yj - yi) || Number.EPSILON) + xi) {
+        inside = !inside;
+      }
     }
     return inside;
   }
