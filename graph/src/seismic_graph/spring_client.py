@@ -1,10 +1,13 @@
 """Thin client for Spring backend endpoints."""
 
+import logging
 from typing import Any
 
 import httpx
 
 from .config import SPRING_BASE_URL
+
+logger = logging.getLogger(__name__)
 
 
 class SpringClient:
@@ -21,7 +24,11 @@ class SpringClient:
             r = await self._client.get(url, params={"hours": hours, "minMagnitude": min_magnitude, "limit": limit})
             r.raise_for_status()
             return r.json()
-        except Exception:
+        except httpx.TimeoutException:
+            logger.warning("Spring timeout: %s", url)
+            return []
+        except Exception as exc:
+            logger.error("Spring error [%s]: %s", url, exc)
             return []
 
     async def historical_events(self, years: int = 50, min_magnitude: float = 4.5) -> list[dict]:
@@ -30,7 +37,11 @@ class SpringClient:
             r = await self._client.get(url, params={"years": years, "minMagnitude": min_magnitude})
             r.raise_for_status()
             return r.json()
-        except Exception:
+        except httpx.TimeoutException:
+            logger.warning("Spring timeout: %s", url)
+            return []
+        except Exception as exc:
+            logger.error("Spring error [%s]: %s", url, exc)
             return []
 
     async def fault_lines(self, bbox: tuple[float, float, float, float], simplify: float = 0.01) -> dict[str, Any] | None:
@@ -40,7 +51,11 @@ class SpringClient:
             r = await self._client.get(url, params={"bbox": bbox_value, "simplify": simplify})
             r.raise_for_status()
             return r.json()
-        except Exception:
+        except httpx.TimeoutException:
+            logger.warning("Spring timeout: %s", url)
+            return None
+        except Exception as exc:
+            logger.error("Spring error [%s]: %s", url, exc)
             return None
 
     async def earthquake_detail(self, event_id: str) -> dict | None:
@@ -49,7 +64,11 @@ class SpringClient:
             r = await self._client.get(url)
             r.raise_for_status()
             return r.json()
-        except Exception:
+        except httpx.TimeoutException:
+            logger.warning("Spring timeout: %s", url)
+            return None
+        except Exception as exc:
+            logger.error("Spring error [%s]: %s", url, exc)
             return None
 
     async def aftershocks(self, event_id: str, limit: int = 12) -> list[dict]:
@@ -58,7 +77,11 @@ class SpringClient:
             r = await self._client.get(url, params={"limit": limit})
             r.raise_for_status()
             return r.json()
-        except Exception:
+        except httpx.TimeoutException:
+            logger.warning("Spring timeout: %s", url)
+            return []
+        except Exception as exc:
+            logger.error("Spring error [%s]: %s", url, exc)
             return []
 
     async def similar_historical(self, event_id: str, limit: int = 8) -> list[dict]:
@@ -67,7 +90,11 @@ class SpringClient:
             r = await self._client.get(url, params={"limit": limit})
             r.raise_for_status()
             return r.json()
-        except Exception:
+        except httpx.TimeoutException:
+            logger.warning("Spring timeout: %s", url)
+            return []
+        except Exception as exc:
+            logger.error("Spring error [%s]: %s", url, exc)
             return []
 
     async def dyfi(self, event_id: str) -> dict | None:
@@ -78,7 +105,11 @@ class SpringClient:
                 return None
             r.raise_for_status()
             return r.json()
-        except Exception:
+        except httpx.TimeoutException:
+            logger.warning("Spring timeout: %s", url)
+            return None
+        except Exception as exc:
+            logger.error("Spring error [%s]: %s", url, exc)
             return None
 
     async def shakemap(self, event_id: str) -> dict | None:
@@ -89,7 +120,11 @@ class SpringClient:
                 return None
             r.raise_for_status()
             return r.json()
-        except Exception:
+        except httpx.TimeoutException:
+            logger.warning("Spring timeout: %s", url)
+            return None
+        except Exception as exc:
+            logger.error("Spring error [%s]: %s", url, exc)
             return None
 
 

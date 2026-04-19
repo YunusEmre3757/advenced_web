@@ -759,7 +759,7 @@ def _route_evaluator(state: BuildingRiskState) -> str:
     """Ed-donner pattern: route back to score node for retry, or end if satisfied."""
     feedback = state.get("evaluator_feedback")
     retry_count = state.get("retry_count", 0)
-    if feedback and retry_count <= MAX_RETRIES:
+    if feedback and retry_count < MAX_RETRIES:
         return "score"   # re-enter the pipeline with feedback injected into prompt
     return END
 

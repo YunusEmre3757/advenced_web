@@ -13,7 +13,8 @@ from typing import Any
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+from typing import Literal
 
 from .checkpoint import close_checkpointer, get_checkpointer, setup_checkpointer
 from .config import DRY_RUN, GRAPH_CHECKPOINT_MODE, GRAPH_PORT, LANGSMITH_PROJECT, LANGSMITH_TRACING
