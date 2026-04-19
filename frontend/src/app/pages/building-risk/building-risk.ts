@@ -144,7 +144,7 @@ export class BuildingRisk implements AfterViewInit, OnDestroy {
     return [
       { key: 'structural', label: 'Yapısal', max: 35, value: s['structural'] ?? 0, icon: 'fa-solid fa-building' },
       { key: 'soil', label: 'Zemin', max: 15, value: s['soil'] ?? 0, icon: 'fa-solid fa-mountain' },
-      { key: 'faultProximity', label: 'Fay Yakınlığı', max: 15, value: s['faultProximity'] ?? 0, icon: 'fa-solid fa-wave-square' },
+      { key: 'faultProximity', label: 'Fay Yakınlığı', max: 20, value: s['faultProximity'] ?? 0, icon: 'fa-solid fa-wave-square' },
       { key: 'historicalSeismicity', label: 'Tarihsel Sismik', max: 15, value: s['historicalSeismicity'] ?? 0, icon: 'fa-solid fa-chart-line' },
       { key: 'observedDamage', label: 'Gözlenen Hasar', max: 20, value: s['observedDamage'] ?? 0, icon: 'fa-solid fa-house-crack' },
     ];

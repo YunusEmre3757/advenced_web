@@ -34,7 +34,7 @@ export interface GraphChatRequest {
 
 export interface GraphChatResponse {
   answer: string;
-  category: 'data' | 'guide' | 'risk' | 'smalltalk';
+  category: 'data' | 'guide' | 'risk' | 'risk_no_loc' | 'smalltalk';
   sources: string[];
 }
 

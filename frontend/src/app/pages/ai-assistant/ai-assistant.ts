@@ -120,6 +120,7 @@ export class AiAssistant implements OnDestroy {
       case 'data': return 'Veri';
       case 'guide': return 'Rehber';
       case 'risk': return 'Risk';
+      case 'risk_no_loc': return 'Konum gerekli';
       case 'smalltalk': return 'Sohbet';
       default: return '';
     }

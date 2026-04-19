@@ -11,6 +11,7 @@ Temperature guide:
 
 from typing import Any, Type, TypeVar
 from pydantic import BaseModel
+from langchain_core.messages import AIMessage
 
 from .config import DRY_RUN, GROQ_API_KEY, GROQ_MODEL
 
@@ -24,12 +25,7 @@ class _DryRunLLM:
         last = messages[-1] if messages else None
         content = getattr(last, "content", None) or (last.get("content") if isinstance(last, dict) else "")
         preview = (content or "")[:180]
-
-        class _Msg:
-            def __init__(self, c: str):
-                self.content = c
-
-        return _Msg(f"[DRY_RUN cevap - GROQ_API_KEY tanimli degil]\nSoru izi: {preview}")
+        return AIMessage(content=f"[DRY_RUN cevap - GROQ_API_KEY tanimli degil]\nSoru izi: {preview}")
 
     def invoke(self, messages: list[Any]) -> Any:
         import asyncio

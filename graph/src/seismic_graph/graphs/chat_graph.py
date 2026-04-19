@@ -40,11 +40,13 @@ Category = Literal["data", "guide", "risk", "risk_no_loc", "smalltalk"]
 # ---------------------------------------------------------------------------
 
 class ChatState(TypedDict, total=False):
+    question: str
     messages: Annotated[list[Any], add_messages]
     user_context: dict
     category: Category
     fetched: dict
     sources: list[str]
+    answer: str
 
 
 # ---------------------------------------------------------------------------
@@ -98,8 +100,26 @@ _KEYWORDS: dict[str, list[str]] = {
 
 def _keyword_classify(question: str) -> Category | None:
     q = question.lower()
+    q_ascii = (
+        q.replace("ç", "c")
+        .replace("ğ", "g")
+        .replace("ı", "i")
+        .replace("ö", "o")
+        .replace("ş", "s")
+        .replace("ü", "u")
+    )
     for category, keywords in _KEYWORDS.items():
-        if any(k in q for k in keywords):
+        if any(
+            k in q or (
+                k.replace("ç", "c")
+                .replace("ğ", "g")
+                .replace("ı", "i")
+                .replace("ö", "o")
+                .replace("ş", "s")
+                .replace("ü", "u")
+            ) in q_ascii
+            for k in keywords
+        ):
             return category  # type: ignore[return-value]
     return None
 
@@ -197,13 +217,31 @@ def _last_question(state: ChatState) -> str:
     return ""
 
 
+def _current_question(state: ChatState) -> str:
+    """Prefer the turn input question, then fall back to persisted history."""
+    incoming = str(state.get("question") or "").strip()
+    return incoming or _last_question(state)
+
+
+def _pending_user_message(state: ChatState) -> list[Any]:
+    """Append the incoming question to message history once per turn."""
+    question = str(state.get("question") or "").strip()
+    if not question:
+        return []
+    history = list(state.get("messages") or [])
+    if history and isinstance(history[-1], HumanMessage) and history[-1].content == question:
+        return []
+    return [HumanMessage(content=question)]
+
+
 # ---------------------------------------------------------------------------
 # Nodes
 # ---------------------------------------------------------------------------
 
 async def classify_node(state: ChatState) -> ChatState:
     """Hybrid classifier: keyword fast-path → LLM structured output fallback."""
-    question = _last_question(state)
+    question = _current_question(state)
+    pending_messages = _pending_user_message(state)
     ctx = state.get("user_context") or {}
     has_location = "latitude" in ctx and "longitude" in ctx
 
@@ -212,7 +250,10 @@ async def classify_node(state: ChatState) -> ChatState:
     if keyword_hit or DRY_RUN:
         raw = keyword_hit or "smalltalk"
         category: Category = "risk_no_loc" if raw == "risk" and not has_location else raw
-        return {"category": category}
+        result_state: ChatState = {"category": category}
+        if pending_messages:
+            result_state["messages"] = pending_messages
+        return result_state
 
     # LLM fallback for ambiguous questions
     llm = get_structured_llm(ClassifyOutput, temperature=0.0)
@@ -232,7 +273,10 @@ async def classify_node(state: ChatState) -> ChatState:
 
     raw_category = result.category
     category = "risk_no_loc" if raw_category == "risk" and not has_location else raw_category
-    return {"category": category}
+    result_state: ChatState = {"category": category}
+    if pending_messages:
+        result_state["messages"] = pending_messages
+    return result_state
 
 
 async def fetch_data_node(_state: ChatState) -> ChatState:
@@ -268,7 +312,7 @@ async def answer_data_node(state: ChatState) -> ChatState:
     rows = state.get("fetched", {}).get("earthquakes", [])
     messages = _build_messages(_system_data(rows), state)
     response: AIMessage = await get_llm(temperature=0.3).ainvoke(messages)
-    return {"messages": [response]}
+    return {"messages": [response], "answer": response.content}
 
 
 async def answer_guide_node(state: ChatState) -> ChatState:
@@ -276,6 +320,7 @@ async def answer_guide_node(state: ChatState) -> ChatState:
     response: AIMessage = await get_llm(temperature=0.3).ainvoke(messages)
     return {
         "messages": [response],
+        "answer": response.content,
         "sources": ["AFAD rehberi (genel bilgi)"],
     }
 
@@ -286,19 +331,19 @@ async def answer_risk_node(state: ChatState) -> ChatState:
     loc_hint = f"{ctx.get('latitude')}, {ctx.get('longitude')}"
     messages = _build_messages(_system_risk(nearby, loc_hint), state)
     response: AIMessage = await get_llm(temperature=0.3).ainvoke(messages)
-    return {"messages": [response]}
+    return {"messages": [response], "answer": response.content}
 
 
 async def answer_risk_no_loc_node(state: ChatState) -> ChatState:
     messages = _build_messages(_system_risk_no_loc(), state)
     response: AIMessage = await get_llm(temperature=0.3).ainvoke(messages)
-    return {"messages": [response]}
+    return {"messages": [response], "answer": response.content}
 
 
 async def answer_smalltalk_node(state: ChatState) -> ChatState:
     messages = _build_messages(_system_smalltalk(), state)
     response: AIMessage = await get_llm(temperature=0.7).ainvoke(messages)
-    return {"messages": [response]}
+    return {"messages": [response], "answer": response.content}
 
 
 def _route(state: ChatState) -> str:
