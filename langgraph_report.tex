@@ -249,48 +249,44 @@ The Chat Graph is a stateful multi-turn assistant. It answers earthquake-related
 
 \begin{figure}[H]
 \centering
-\begin{tikzpicture}[font=\small]
-    % Top level
-    \node[datanode] (start) at (0,0) {START};
-    \node[hybridnode, minimum width=4.4cm] (classify) at (0,-1.8) {classify\\keyword fast-path + LLM fallback};
+\begin{tikzpicture}[font=\small, node distance=1.0cm and 1.6cm]
+    % Core flow
+    \node[datanode] (start) {START};
+    \node[hybridnode, below=1.1cm of start, minimum width=4.4cm] (classify) {classify\\keyword fast-path + LLM fallback};
 
-    % Main branches
-    \node[datanode] (fetchdata) at (-4.8,-4.3) {fetch\_data};
-    \node[llmnode] (answerdata) at (-2.0,-4.3) {answer\_data};
+    % Route targets from classify
+    \node[datanode, below left=2.0cm and 3.6cm of classify] (fetchdata) {fetch\_data};
+    \node[datanode, below=2.0cm of classify] (fetchrisk) {fetch\_risk};
+    \node[llmnode, below right=2.0cm and 3.6cm of classify] (answerguide) {answer\_guide};
 
-    \node[llmnode] (answerguide) at (4.8,-4.3) {answer\_guide};
+    % Downstream answer nodes
+    \node[llmnode, below=1.4cm of fetchdata] (answerdata) {answer\_data};
+    \node[llmnode, below=1.4cm of fetchrisk] (answerrisk) {answer\_risk};
+    \node[llmnode, below left=1.5cm and 1.8cm of answerrisk] (answernoloc) {answer\_risk\_no\_loc};
+    \node[llmnode, below right=1.5cm and 1.8cm of answerrisk] (answersmall) {answer\_smalltalk};
 
-    \node[datanode] (fetchrisk) at (-1.4,-6.2) {fetch\_risk};
-    \node[llmnode] (answerrisk) at (1.4,-6.2) {answer\_risk};
-
-    \node[llmnode] (answernoloc) at (-4.2,-8.1) {answer\_risk\_no\_loc};
-    \node[llmnode] (answersmall) at (4.2,-8.1) {answer\_smalltalk};
-
-    % Merge / end
-    \node[mergepoint] (merge) at (0,-10.1) {};
-    \node[datanode] (end) at (0,-11.3) {END};
+    \node[datanode, below=3.0cm of answerrisk] (end) {END};
 
     % Entry
     \draw[line] (start) -- (classify);
 
-    % Outgoing routes from classify
-    \draw[line] (classify.south west) to[out=220,in=90] node[pos=0.45, above, font=\scriptsize] {data} (fetchdata.north);
-    \draw[line] (classify.south east) to[out=-40,in=90] node[pos=0.45, above, font=\scriptsize] {guide} (answerguide.north);
+    % Conditional routes from classify (matches _route mapping)
+    \draw[line] (classify.south west) to[out=220,in=90] node[pos=0.44, above, font=\scriptsize] {data} (fetchdata.north);
     \draw[line] (classify.south) -- node[right, font=\scriptsize] {risk} (fetchrisk.north);
-    \draw[line] (classify.south west) to[out=235,in=90] node[pos=0.55, left, font=\scriptsize] {risk\_no\_loc} (answernoloc.north);
-    \draw[line] (classify.south east) to[out=-55,in=90] node[pos=0.55, right, font=\scriptsize] {smalltalk} (answersmall.north);
+    \draw[line] (classify.south east) to[out=-40,in=90] node[pos=0.44, above, font=\scriptsize] {guide} (answerguide.north);
+    \draw[line] (classify.south west) to[out=242,in=90] node[pos=0.55, left, font=\scriptsize] {risk\_no\_loc} (answernoloc.north);
+    \draw[line] (classify.south east) to[out=-62,in=90] node[pos=0.55, right, font=\scriptsize] {smalltalk} (answersmall.north);
 
-    % Internal chained paths
+    % Sequential edges
     \draw[line] (fetchdata) -- (answerdata);
     \draw[line] (fetchrisk) -- (answerrisk);
 
-    % Success paths to END
-    \draw[successline] (answerdata.south) to[out=-90,in=160] (merge);
-    \draw[successline] (answerguide.south) to[out=-90,in=20] (merge);
-    \draw[successline] (answerrisk.south) -- (merge);
-    \draw[successline] (answernoloc.east) to[out=0,in=180] (merge);
-    \draw[successline] (answersmall.west) to[out=180,in=0] (merge);
-    \draw[successline] (merge) -- (end);
+    % Terminal edges (all answer nodes go directly to END)
+    \draw[successline] (answerdata.south) to[out=-90,in=160] (end.north);
+    \draw[successline] (answerguide.south) to[out=-90,in=20] (end.north);
+    \draw[successline] (answerrisk.south) -- (end.north);
+    \draw[successline] (answernoloc.east) to[out=0,in=180] (end.west);
+    \draw[successline] (answersmall.west) to[out=180,in=0] (end.east);
 \end{tikzpicture}
 \caption{Chat Graph topology. Blue boxes are deterministic/data nodes, purple boxes are LLM answer nodes, and green arrows show successful completion paths.}
 \label{fig:chat-topology}
