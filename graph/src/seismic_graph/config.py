@@ -22,6 +22,7 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 GROQ_MODEL = os.environ.get("GROQ_MODEL", "llama-3.3-70b-versatile")
 SPRING_BASE_URL = os.environ.get("SPRING_BASE_URL", "http://localhost:8080")
 GRAPH_PORT = int(os.environ.get("GRAPH_PORT", "8002"))
+MCP_SERVER_URL = os.environ.get("MCP_SERVER_URL", f"http://127.0.0.1:{GRAPH_PORT}/mcp/")
 GRAPH_DATABASE_URL = os.environ.get(
     "GRAPH_DATABASE_URL",
     "postgresql://seismic:seismic_dev_only@localhost:5432/seismic",

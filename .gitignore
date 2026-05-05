@@ -4,3 +4,6 @@ graph/.env
 infra/data/*.tif
 infra/data/*.zip
 .test-logs/
+__pycache__/
+*.pyc
+*.pyo

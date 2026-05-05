@@ -487,19 +487,6 @@ def _compute_scores(building: dict[str, Any], context: dict[str, Any], location:
     }
 
 
-def _fallback_summary(state: BuildingRiskState) -> str:
-    label = state.get("label", "Orta risk")
-    total = state.get("totalScore", 0)
-    bld_d = state.get("buildingDrivers", [])
-    loc_d = state.get("locationDrivers", [])
-    key = (bld_d + loc_d)[:3]
-    parts = [f"Bu bina icin on degerlendirme {label.lower()} seviyesinde. Toplam skor {total}/100."]
-    if key:
-        parts.append(f"Skoru en cok {', '.join(key).lower()} etkiliyor.")
-    parts.append("Bu sonuc kesin bir muhendislik raporu degil; yerinde kontrol ve uzman gorusu onerilir.")
-    return " ".join(parts)
-
-
 # ---------------------------------------------------------------------------
 # Graph nodes
 # ---------------------------------------------------------------------------
@@ -625,11 +612,6 @@ _COMMON_RULES = (
 
 async def brief_analysis_node(state: BuildingRiskState) -> BuildingRiskState:
     """Low-risk path (score < 20): 2-3 sentence note with structured output."""
-    if DRY_RUN:
-        return {
-            "summary": _fallback_summary(state),
-            "confidence": "orta",
-        }
     llm = get_structured_llm(BriefAnalysisOutput)
     prompt = (
         "Bina risk on degerlendirmesi dusuk cikti. Kisa, rahatlatici Turkce ozet yaz.\n"
@@ -638,19 +620,14 @@ async def brief_analysis_node(state: BuildingRiskState) -> BuildingRiskState:
     )
     result: BriefAnalysisOutput = await llm.ainvoke([{"role": "user", "content": prompt}])
     return {
-        "summary": result.summary or _fallback_summary(state),
-        "confidence": result.confidence or state.get("confidence", "orta"),
-        "recommendedActions": result.recommendedActions or state.get("recommendedActions", []),
+        "summary": result.summary,
+        "confidence": result.confidence,
+        "recommendedActions": result.recommendedActions,
     }
 
 
 async def standard_analysis_node(state: BuildingRiskState) -> BuildingRiskState:
     """Medium-risk path (20 ≤ score < 70): 2-paragraph LLM enrichment."""
-    if DRY_RUN:
-        return {
-            "summary": _fallback_summary(state),
-            "confidence": "orta",
-        }
     llm = get_structured_llm(StandardAnalysisOutput)
     prompt = (
         "Bina risk on degerlendirmesi orta duzeyde cikti. 2 kisa paragraf Turkce ozet yaz:\n"
@@ -661,19 +638,14 @@ async def standard_analysis_node(state: BuildingRiskState) -> BuildingRiskState:
     )
     result: StandardAnalysisOutput = await llm.ainvoke([{"role": "user", "content": prompt}])
     return {
-        "summary": result.summary or _fallback_summary(state),
-        "confidence": result.confidence or state.get("confidence", "orta"),
-        "recommendedActions": result.recommendedActions or state.get("recommendedActions", []),
+        "summary": result.summary,
+        "confidence": result.confidence,
+        "recommendedActions": result.recommendedActions,
     }
 
 
 async def deep_analysis_node(state: BuildingRiskState) -> BuildingRiskState:
     """High/critical path (score ≥ 70): 3-paragraph detailed analysis."""
-    if DRY_RUN:
-        return {
-            "summary": _fallback_summary(state),
-            "confidence": "dusuk",
-        }
     llm = get_structured_llm(DeepAnalysisOutput)
     prompt = (
         "Bina risk on degerlendirmesi yuksek/kritik seviyede cikti. Ayrintili Turkce analiz yaz:\n"
@@ -688,15 +660,15 @@ async def deep_analysis_node(state: BuildingRiskState) -> BuildingRiskState:
     extra = [c for c in (result.additionalCautions or []) if str(c).strip()][:2]
     merged = (state.get("cautions", []) + extra)[:4]
     return {
-        "summary": result.summary or _fallback_summary(state),
-        "confidence": result.confidence or state.get("confidence", "dusuk"),
-        "recommendedActions": result.recommendedActions or state.get("recommendedActions", []),
+        "summary": result.summary,
+        "confidence": result.confidence,
+        "recommendedActions": result.recommendedActions,
         "cautions": merged,
     }
 
 
 async def evaluator_node(state: BuildingRiskState) -> BuildingRiskState:
-    """Ed-donner pattern: LLM evaluates its own previous output.
+    """LLM evaluates its own previous output.
 
     Checks if the summary is specific, covers both building and location factors,
     has the right number of recommendedActions, and uses natural Turkish.

@@ -23,7 +23,12 @@ from .graphs.building_risk_graph import get_building_risk_graph
 from .graphs.notify_graph import get_notify_graph
 from .graphs.quake_detail_graph import get_quake_detail_graph
 from .graphs.safe_check_graph import get_safe_check_graph
+from .mcp.seismic_client import run_mcp_demo
+from .mcp.seismic_server import mcp as seismic_mcp
 from .spring_client import get_spring_client
+
+
+seismic_mcp_app = seismic_mcp.streamable_http_app()
 
 
 @asynccontextmanager
@@ -36,7 +41,8 @@ async def lifespan(_app: FastAPI):
     checkpointer = await setup_checkpointer()
     reset_chat_graph()
     get_chat_graph(checkpointer)
-    yield
+    async with seismic_mcp.session_manager.run():
+        yield
     await get_spring_client().close()
     await close_checkpointer()
 
@@ -49,6 +55,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/mcp", seismic_mcp_app)
 
 
 class ChatRequest(BaseModel):
@@ -125,6 +133,28 @@ class BuildingRiskResponse(BaseModel):
     sources: list[str] = Field(default_factory=list)
 
 
+class McpDemoRequest(BaseModel):
+    toolName: str = Field(default="get_recent_earthquakes")
+    arguments: dict[str, Any] = Field(default_factory=dict)
+    # Legacy convenience fields kept for backwards compatibility
+    hours: int = Field(default=24, ge=1, le=168)
+    minMagnitude: float = Field(default=1.0, ge=0.0, le=10.0)
+    limit: int = Field(default=8, ge=1, le=20)
+
+
+class McpDemoResponse(BaseModel):
+    transport: str
+    endpoint: str
+    server: dict[str, Any]
+    steps: list[dict[str, Any]]
+    tools: list[dict[str, Any]]
+    selectedTool: str
+    arguments: dict[str, Any]
+    result: dict[str, Any]
+    stderr: str = ""
+    explanation: list[str]
+
+
 @app.get("/health", tags=["System"])
 async def health():
     """Health check — verify LangGraph service is running.
@@ -137,6 +167,19 @@ async def health():
         "port": GRAPH_PORT,
         "checkpointMode": GRAPH_CHECKPOINT_MODE,
     }
+
+
+@app.post("/graph/mcp-demo", response_model=McpDemoResponse, tags=["MCP"])
+async def mcp_demo_endpoint(req: McpDemoRequest):
+    """MCP Inspector — connect to the HTTP MCP endpoint and call any registered tool.
+
+    Accepts any tool name and its arguments so the Angular demo page can
+    call all 8 tools interactively for class demonstration.
+    """
+    args = req.arguments or {}
+    if not args and req.toolName == "get_recent_earthquakes":
+        args = {"hours": req.hours, "min_magnitude": req.minMagnitude, "limit": req.limit}
+    return await run_mcp_demo(tool_name=req.toolName, arguments=args)
 
 
 @app.post("/graph/chat", response_model=ChatResponse, tags=["Graphs"])

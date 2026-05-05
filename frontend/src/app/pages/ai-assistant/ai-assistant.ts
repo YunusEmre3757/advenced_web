@@ -24,7 +24,7 @@ export class AiAssistant implements OnDestroy {
   readonly messages = signal<Message[]>([
     {
       role: 'assistant',
-      text: 'Merhaba. Son depremleri, guvenlik rehberini veya bolge riskini sorabilirsin.',
+      text: 'Merhaba. Son depremleri ve konum bazli sismik baglami MCP tool\'lari uzerinden sorgulayabilirim.',
       category: 'smalltalk',
     },
   ]);
@@ -36,6 +36,7 @@ export class AiAssistant implements OnDestroy {
 
   readonly suggestions = [
     'Son 24 saatte Turkiye\'de kac deprem oldu?',
+    'Son 7 gunde M3 ve uzeri depremleri getir',
     'Depreme nasil hazirlanmaliyim?',
     'Benim bolgemde risk var mi?',
   ];

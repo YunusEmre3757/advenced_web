@@ -189,6 +189,31 @@
 }
 
 /* ---- Responsive Navbar ---- */
+@media (max-width: 1180px) {
+    .nav {
+        gap: 1rem;
+        padding: 0 1rem;
+    }
+
+    .nav-menu {
+        gap: 0.1rem;
+    }
+
+    .nav-item {
+        padding: 0.4rem 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .nav-end {
+        gap: 0.5rem;
+    }
+
+    .nav-icon-btn,
+    .nav-separator {
+        display: none;
+    }
+}
+
 @media (max-width: 900px) {
     .nav {
         gap: 1.5rem;

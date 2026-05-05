@@ -11,6 +11,7 @@ import { BuildingRisk } from './pages/building-risk/building-risk';
 import { HistoricalMap } from './pages/historical-map/historical-map';
 import { HeatmapPage } from './pages/heatmap/heatmap';
 import { EarthquakeDetailPage } from './pages/earthquake-detail/earthquake-detail';
+import { McpDemoPage } from './pages/mcp-demo/mcp-demo';
 import { authGuard } from './core/auth.guard';
 
 export const routes: Routes = [
@@ -24,6 +25,7 @@ export const routes: Routes = [
     { path: 'building-risk', component: BuildingRisk },
     { path: 'historical-map', component: HistoricalMap },
     { path: 'heatmap', component: HeatmapPage },
+    { path: 'mcp-demo', component: McpDemoPage },
     { path: 'dashboard', component: Dashboard },
     { path: 'map', component: Map },
     { path: 'earthquakes/:id', component: EarthquakeDetailPage },

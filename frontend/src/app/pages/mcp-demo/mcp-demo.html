@@ -1,0 +1,266 @@
+<section class="mcp-shell">
+
+  <!-- ── Header ── -->
+  <header class="mcp-header">
+    <div class="mcp-title">
+      <span class="mcp-eyebrow">Model Context Protocol</span>
+      <h1>MCP Canlı Gösterim</h1>
+      <p>
+        Graph servisi, <code>http://localhost:8002/mcp/</code> adresine mount edilmiş MCP sunucusuna
+        bağlanır. Tool şemaları runtime'da keşfedilir ve seçilen tool standart MCP protokolüyle çağrılır.
+        Claude Desktop veya başka bir MCP host da aynı endpoint'i kullanabilir.
+      </p>
+    </div>
+  </header>
+
+  <!-- ── Tool Seçici ── -->
+  <div class="tool-picker">
+    @for (tool of tools; track trackByTool($index, tool)) {
+      <button
+        class="tool-chip"
+        [class.tool-chip--active]="tool.name === selectedToolName()"
+        (click)="selectTool(tool.name)"
+      >
+        {{ tool.label }}
+      </button>
+    }
+  </div>
+
+  <!-- ── Argüman Formu ── -->
+  <div class="arg-form">
+    <div class="arg-form-head">
+      <div>
+        <strong>{{ selectedTool().label }}</strong>
+        <span>{{ selectedTool().description }}</span>
+      </div>
+      <button class="run-btn" [disabled]="loading()" (click)="runDemo()">
+        @if (loading()) {
+          <i class="fa-solid fa-spinner fa-spin"></i> Çalışıyor
+        } @else {
+          <i class="fa-solid fa-play"></i> Çalıştır
+        }
+      </button>
+    </div>
+
+    @if (selectedTool().params.length > 0) {
+      <div class="arg-fields">
+        @for (param of selectedTool().params; track trackByParam($index, param)) {
+          <label class="arg-field">
+            <span>{{ param.label }}</span>
+            @if (param.options) {
+              <select
+                [ngModel]="argValues()[param.name]"
+                (ngModelChange)="setArg(param.name, $event)"
+              >
+                @for (opt of param.options; track opt) {
+                  <option [value]="opt">{{ opt }}</option>
+                }
+              </select>
+            } @else if (param.type === 'boolean') {
+              <input
+                type="checkbox"
+                class="arg-checkbox"
+                [ngModel]="argValues()[param.name]"
+                (ngModelChange)="setArg(param.name, $event)"
+              />
+            } @else if (param.type === 'string') {
+              <input
+                type="text"
+                [ngModel]="argValues()[param.name]"
+                (ngModelChange)="setArg(param.name, $event)"
+              />
+            } @else {
+              <input
+                type="number"
+                [step]="param.step ?? 1"
+                [min]="param.min ?? null"
+                [max]="param.max ?? null"
+                [ngModel]="argValues()[param.name]"
+                (ngModelChange)="setArg(param.name, +$event)"
+              />
+            }
+          </label>
+        }
+      </div>
+    } @else {
+      <p class="no-params">Bu tool argüman almıyor.</p>
+    }
+  </div>
+
+  <!-- ── Hata ── -->
+  @if (error()) {
+    <div class="mcp-alert">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      <span>{{ error() }}</span>
+    </div>
+  }
+
+  @if (response(); as demo) {
+
+    <!-- ── Status Bar ── -->
+    <div class="mcp-status">
+      <div>
+        <span class="status-label">Server</span>
+        <strong>{{ demo.server.name }}</strong>
+        <em>{{ demo.server.protocolVersion }}</em>
+      </div>
+      <div>
+        <span class="status-label">Transport</span>
+        <strong>{{ demo.transport }}</strong>
+        <em>{{ demo.endpoint }}</em>
+      </div>
+      <div>
+        <span class="status-label">Keşfedilen Tool</span>
+        <strong>{{ toolCount() }}</strong>
+        <em>tools/list</em>
+      </div>
+      <div>
+        <span class="status-label">Çağrılan Tool</span>
+        <strong>{{ demo.selectedTool }}</strong>
+        <em>tools/call</em>
+      </div>
+    </div>
+
+    <!-- ── Protokol Adımları + Sonuç ── -->
+    <div class="mcp-grid">
+
+      <section class="mcp-panel">
+        <div class="panel-head">
+          <i class="fa-solid fa-route"></i>
+          <h2>Protokol adımları</h2>
+        </div>
+        <div class="step-list">
+          @for (step of demo.steps; track step.name; let i = $index) {
+            <div class="step-row" [attr.data-status]="step.status">
+              <div class="step-index">{{ i + 1 }}</div>
+              <div class="step-copy">
+                <strong>{{ step.label }}</strong>
+                <span>{{ step.detail }}</span>
+              </div>
+              @if (step.status === 'error') {
+                <i class="fa-solid fa-xmark" style="color:#ef4444"></i>
+              } @else {
+                <i class="fa-solid fa-check"></i>
+              }
+            </div>
+          }
+        </div>
+      </section>
+
+      <section class="mcp-panel">
+        <div class="panel-head">
+          <i class="fa-solid fa-terminal"></i>
+          <h2>Sonuç özeti</h2>
+        </div>
+        <p class="result-summary">{{ resultSummary() || 'Özet bilgi mevcut degil.' }}</p>
+
+        @if (isEarthquakeList()) {
+          <div class="result-metrics">
+            <div>
+              <span>Olay</span>
+              <strong>{{ demo.result['count'] ?? records().length }}</strong>
+            </div>
+            <div>
+              <span>Ort. M</span>
+              <strong>{{ demo.result['averageMagnitude'] ?? '-' }}</strong>
+            </div>
+            <div>
+              <span>En Guclu</span>
+              <strong>
+                @if (strongest(); as s) { M{{ s['magnitude'] }} } @else { - }
+              </strong>
+            </div>
+          </div>
+        }
+
+        <div class="source-line">
+          <i class="fa-solid fa-database"></i>
+          {{ demo.result['source'] ?? '-' }}
+        </div>
+
+        <div class="arg-badge-row">
+          @for (entry of $any(demo.arguments) | keyvalue; track entry.key) {
+            <span class="arg-badge"><em>{{ entry.key }}</em>{{ entry.value }}</span>
+          }
+        </div>
+      </section>
+    </div>
+
+    <!-- ── Tool Listesi ── -->
+    <section class="mcp-panel">
+      <div class="panel-head">
+        <i class="fa-solid fa-screwdriver-wrench"></i>
+        <h2>MCP tool listesi — tools/list yaniti</h2>
+      </div>
+      <div class="tool-table">
+        @for (tool of demo.tools; track tool.name) {
+          <article class="tool-row" [class.tool-row--selected]="tool.name === demo.selectedTool">
+            <div class="tool-name">
+              <strong>{{ tool.name }}</strong>
+              @if (tool.name === demo.selectedTool) {
+                <span>cagirildi</span>
+              }
+            </div>
+            <p>{{ tool.description }}</p>
+            <pre>{{ formatSchema(tool.inputSchema) }}</pre>
+          </article>
+        }
+      </div>
+    </section>
+
+    <!-- ── Tool Ciktisi ── -->
+    <section class="mcp-panel">
+      <div class="panel-head">
+        <i class="fa-solid fa-wave-square"></i>
+        <h2>Tool ciktisi</h2>
+      </div>
+
+      @if (isEarthquakeList()) {
+        <div class="quake-list">
+          @for (quake of records(); track trackByIndex($index)) {
+            <div class="quake-row">
+              <div class="quake-mag">M{{ asRecord(quake)['magnitude'] }}</div>
+              <div class="quake-main">
+                <strong>{{ asRecord(quake)['location'] }}</strong>
+                <span>
+                  {{ formatTime($any(asRecord(quake)['time'])) }}
+                  · {{ asRecord(quake)['depthKm'] }} km derinlik
+                </span>
+              </div>
+            </div>
+          }
+          @empty {
+            <p class="empty-state">Bu filtrelerle olay bulunamadi.</p>
+          }
+        </div>
+      } @else {
+        <div class="result-kv">
+          @for (key of resultKeys(); track trackByKey($index, key)) {
+            <div class="kv-row">
+              <span class="kv-key">{{ key }}</span>
+              <span class="kv-val">{{ demo.result[key] }}</span>
+            </div>
+          }
+        </div>
+        <details class="raw-json">
+          <summary>Ham JSON goster</summary>
+          <pre>{{ formatJson(demo.result) }}</pre>
+        </details>
+      }
+    </section>
+
+    <!-- ── Aciklamalar ── -->
+    <section class="mcp-notes">
+      @for (line of demo.explanation; track trackByIndex($index)) {
+        <p><i class="fa-solid fa-circle-info"></i>{{ line }}</p>
+      }
+    </section>
+
+  } @else if (loading()) {
+    <div class="loading-state">
+      <i class="fa-solid fa-spinner fa-spin"></i>
+      MCP demo hazirlaniyor...
+    </div>
+  }
+
+</section>

@@ -58,6 +58,11 @@ public class GraphController {
         return client.postJson("/graph/building-risk", body);
     }
 
+    @PostMapping("/mcp-demo")
+    public Object mcpDemo(@RequestBody Map<String, Object> body) {
+        return client.postJson("/graph/mcp-demo", body);
+    }
+
     @PostMapping("/safe-check")
     public Object safeCheck(@RequestBody Map<String, Object> body) {
         return client.postJson("/graph/safe-check", body);
